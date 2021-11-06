@@ -1,0 +1,155 @@
+\documentclass[utf8]{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[parfill]{parskip}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listingsutf8}
+\usepackage{hyperref}
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{fullpage}
+
+% -----------------------------------------------------
+
+
+\title{SAT-solitaire}
+\author{Fonseca Loïc - Bourgeois Noé}
+\date{November 2021}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\newpage
+
+% -----------------------------------------------------
+
+\section{Introduction}
+Le Solitaire est un jeu de plateau classique à un seul joueur. 
+Le plateau de jeu comporte des trous dans lesquels on peut mettre des billes. 
+Pour jouer un coup au Solitaire, il faut choisir trois cases adjacentes, qui sont
+toutes les trois sur une mˆeme ligne ou une mˆeme colonne du plateau. De surcoˆıt,
+exactement deux billes doivent ˆetre pos´ees sur les trois cases, dont une pos´ee sur
+la case du milieu. On fait ”sauter” la bille qui se trouve sur une des extr´emit´es
+par dessus la bille du milieu, pour la faire atterrir dans le trou qui se trouve `a
+l’autre extr´emit´e. On enl`eve alors la bille du milieu du plateau. La Figure 2 est
+une repr´esentation des diff´erents coups possible, en utilisant la correspondance
+entre matrice et configurations du jeu.Nous pouvons représenter une configuration du jeu par un entier positif n, et
+une matrice de taille n × n dont les éléments appartiennent à {-1, 0, 1}. Si la
+valeur de la case (i, j) de la matrice est égale à -1, alors il n’y a pas de trous
+sur le plateau à la position (i, j); si cette valeur est égale à 0, alors il y a un
+trou sur le plateau `a la position (i, j), mais il n’y a pas de bille posée dessus; 
+si cette valeur est égale à 1, alors il y a un trou sur le plateau à la position (i, j) avec une bille posée dessus.
+
+
+\section{Formule Normale Conjonctive}
+Soit n un entier, \\
+M et M' deux matrices de tailles n×n 
+dont les éléments sont dans \{-1, 0, 1\}. 
+
+satisfaisable si et seulement s’il est possible de passer de\\
+la configuration du Solitaire
+qui correspond à M \\
+à \\
+celle qui correspond à M'\\
+, en effectuant un ou
+plusieurs coups. 
+
+
+
+\subsection{choix de variables Booléennes}
+
+
+\subsection{décomposition}
+\subsubsection{partie 1}
+
+
+
+
+% -----------------------------------------------------
+\newpage
+
+\section{Programs}
+
+\subsection{ Mirroring Cannibal Sheeps }
+
+\subsubsection{function}
+
+\begin{figure}[H]
+\begin{minipage}{\textwidth}
+  \centering	
+	\begin{lstlisting}
+	function solution(m1, m2) 
+    \end{lstlisting}
+  \label{fig:code_exemple}
+\end{minipage}
+\end{figure}
+
+
+
+
+\subsection{ Sheeps Arguing with Tornado }
+En se basant sur le programme précédent, 
+un programme qui pour toute configuration de la Figure 1 (sauf la 6 et la
+4), \\
+teste s’il est possible d’atteindre une configuration du même plateau
+mais qui contient une seule bille là où au départ il n’y avait pas de bille.\\
+
+
+\subsubsection{function}
+
+\begin{figure}[H]
+\begin{minipage}{\textwidth}
+  \centering	
+	\begin{lstlisting}
+	function tornado(m1, m2) 
+    \end{lstlisting}
+  \label{fig:code_exemple}
+\end{minipage}
+\end{figure}
+
+\paragraph{paragraph}:
+    paragraph
+    
+  
+
+\section{Résultats}
+\begin{center}
+\begin{tabular}{|c|c|c|c|
+                |c|c|c|c|}
+\hline
+plateau taille & quantité billes & Mirror & Tornado \\
+\hline
+              &                &       &\\
+             &                &               & \\
+             &                &               & \\
+             &                &               & \\
+\hline
+             &                &              & \\
+\hline
+\end{tabular}
+\end{center}
+
+
+
+\begin{figure}[H]
+  \centering
+	\includegraphics[scale=0.8]{img/Figure_1.png}
+  \label{fig:logo}
+\end{figure}
+
+\newpage
+
+\section{Discussion}
+    
+
+\section{Conclusion}
+
+
+\end{document}
