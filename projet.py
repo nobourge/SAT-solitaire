@@ -25,6 +25,7 @@ import re
 
 
 def afficher_solution(interpretation):
+
     ## TODO:
 
 
@@ -37,7 +38,7 @@ def solution(m1, m2):
     vpool = IDPool(start_from=1) # pour le stockage des identifiants entiers des couples (i,j)
     cnf = CNF()  # construction d'un objet formule en forme normale conjonctive (Conjunctive Normal Form)
     n = len(sys.argv[1]) # dimension de la grille
-
+    trous=[]
 
     # construction de la formule
 
@@ -46,7 +47,7 @@ def solution(m1, m2):
     # contraintes
 
 
-    # finale
+    # finales
     for i in range(n):
         for j in range(n):
             if 0 < m1[i][j] :
@@ -119,5 +120,5 @@ def solution(m1, m2):
                     print("\nSolution pas unique, en voici une autre:\n")
                     interpretation = solver.get_model()
                     interpretation_filtre = list(filter(lambda x : x >=0, interpretation))
-                    affichage_solution(interpretation_filtre)
+                    afficher_solution(interpretation_filtre)
         return True
