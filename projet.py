@@ -26,8 +26,6 @@ import re
 def afficher_solution(interpretation):
     for i in interpretation:
         print(i)
-
-
 #  todo
 
 
