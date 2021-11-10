@@ -1,0 +1,239 @@
+\documentclass[utf8]{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[parfill]{parskip}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listingsutf8}
+\usepackage{hyperref}
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{fullpage}
+
+
+% -----------------------------------------------------
+
+
+\title{SAT-solitaire}
+\author{Fonseca Loïc - Bourgeois Noé}
+\date{November 2021}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\newpage
+
+% -----------------------------------------------------
+
+\section{Introduction}
+Le Solitaire est un jeu de plateau classique à un seul joueur.
+Le plateau de jeu comporte des trous dans lesquels on peut mettre des billes.
+Pour jouer un coup au Solitaire, il faut choisir trois cases adjacentes, qui sont
+toutes les trois sur une même ligne ou une même colonne du plateau. De surcroît,
+exactement deux billes doivent être posées sur les trois cases, dont une posée sur
+la case du milieu. On fait ”sauter” la bille qui se trouve sur une des extrémités
+par dessus la bille du milieu, pour la faire atterrir dans le trou qui se trouve à
+l’autre extrémité. On enlève alors la bille du milieu du plateau. La Figure 2 est
+une représentation des différents coups possible, en utilisant la correspondance
+entre matrice et configurations du jeu. Nous pouvons représenter une configuration du jeu par un entier positif n, et
+une matrice de taille n × n dont les éléments appartiennent à {-1, 0, 1}. Si la
+valeur de la case (i, j) de la matrice est égale à -1, alors il n’y a pas de trous
+sur le plateau à la position (i, j); si cette valeur est égale à 0, alors il y a un
+trou sur le plateau `a la position (i, j), mais il n’y a pas de bille posée dessus;
+si cette valeur est égale à 1, alors il y a un trou sur le plateau à la position (i, j) avec une bille posée dessus.
+
+
+\section{Formule Normale Conjonctive}
+Soit n un entier, \\
+M et M' deux matrices de tailles n×n
+dont les éléments sont dans \{-1, 0, 1\}.
+
+
+satisfaisable si et seulement s’il est possible de passer de
+\\la configuration du Solitaire
+qui correspond à M
+\\à
+\\celle qui correspond à M'
+, en effectuant un ou
+plusieurs coups.
+\subsection{Composition}
+
+\subsubsection{Variables  Booléennes}
+
+On commence par définir les variables de nos formules.
+\\La variable x$_i,_j,_k$
+\\vaut “Vrai” si le nombre k est à la ligne i, colonne j.
+
+\subsubsection{Une valeur par case}
+On note que la nature du problème impose des contraintes qui ne sont pas notées dans l’énoncé.
+\\Par exemple, dans chaque case (i, j), il ne peut y avoir qu’une seule valeur k.
+
+En d’autre termes pour tout i,
+pour tout j, pour tout k != k'
+, on n’a pas x$_i,_j,_k$ ∧ x$_i,_j,_{k^\prime}$.
+
+\overset{N}{\underset{i=1}{\bigwedge}}
+~~\overset{N}{\underset{j=1}{\bigwedge}}
+~~\underset{0<={k,k'}<=1}{\bigwedge}
+¬x$_i,_j,_k$ ~ \lor ~ ¬x$_i,_j,_{k^\prime}$
+
+\subsubsection{Coup}
+
+\paragraph{Voisin}
+On commence par définir ce qu’est un voisin : il s’agit d’une autre case dont les coordonnées ne sont pas éloignées de plus de 1.
+
+Avec L le nombre de lignes de M
+\\et C le nombre de colonnes de M,
+
+V (i, j) = {(i', j') \in [1, N]^2| max(|i - i'|, |j - j'| = 1)}
+
+
+\subparagraph{sur même ligne}
+Considérant une case (i,j)
+alors une voisine se trouve en (i,j-1)
+et l'autre en (i,j+1)
+
+Considérant une case x$_i,_j,_k$, alors une voisine se trouve en x$_i,_{j-1},_{k^\prime}$ et l'autre en x$_i,_{j+1},_{k^{\prime\prime}}$
+
+(x$_{i,{j-1},k}$ \lor ~~ x$_{i,{j-1},{k^\prime}}$ )
+\land ~~
+x$_i,_j,_k$
+\land ~~
+(x$_{i,{j+1},{k^{\prime}}}$ \lor ~~ x$_{i,{j+1},k}$)
+
+
+\subparagraph{sur même colonne}
+Considérant une case (i,j)
+alors une voisine se trouve en (i-1,j)
+et l'autre en (i+1,j)
+
+variable x$_i,_j,_k$,
+alors une voisine se trouve en x$_{i-1},_j,_{k^\prime}$ et l'autre en x$_{i+1},_j,_{k^{\prime\prime}}$
+
+(x$_{{i-1},j,1}$ \lor ~~ x$_{{i-1},j,0}$ )
+\land ~~
+x$_{i,j,1}$
+\land ~~
+(x$_{{i+1},j,0}$ \lor ~~ x$_{{i+1},j,1}$)
+
+\subparagraph{non-case}
+Considérant une case (i,j)
+variable
+x$_{i,j,k}$,
+les cases aux positions
+(i,j-1) variable x$_{i,{j-1},k}$
+et (i,j+1) variable x$_{i,{j+1},{k^ {\prime} } }$,
+sont des voisines
+si et seulement si k,$k^ {\prime}$ != -1
+
+\subparagraph{Jouer un coup}
+Si on peut jouer un coup, alors, considérant une bille à la position (i,j) x$_{i,j,k}$, une de ses voisines
+a forcément k = 1 et l'autre k = 0.\newline
+Soit si x$_{i,j-1,1}$, x$_{i,j,1}$ et x$_{i,j+1,0}$, alors on peut jouer un coup tel que x$_{i,j-1,0}$, x$_{i,j,0}$ et x$_{i,j+1,1}$
+
+\bigskip
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+((X$_{i,{j-1},1}$ \lor ~~ X$_{i,{j-1},0}$ )
+\lor ~~
+\\ (X$_{{i-1},j,1}$ \lor ~~ X$_{{i-1},j,0}$ ))
+\land ~~~~~~~
+Y$_{i,j,1}$
+~~~~~~~~~~~~~~~~~~~~~~~~~~ \land ~~
+((Z$_{i,{j+1},0}$ \lor ~~ Z$_{i,{j+1},1}$)
+\lor
+\\~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(Z$_{{i+1},j,0}$ \lor ~~ Z$_{{i+1},j,1}$))
+
+\land ~~
+ñot (xk = 0 \land zk = 0)
+\land ~~
+ñot (xk = 1 \land zk = 1)
+
+% -----------------------------------------------------
+\newpage
+
+\section{Programs}
+
+\subsection{ Mirroring Cannibal Sheeps }
+
+\subsubsection{function}
+
+\begin{figure}[H]
+\begin{minipage}{\textwidth}
+  \centering	
+	\begin{lstlisting}
+	function solution(m1, m2) 
+    \end{lstlisting}
+  \label{fig:code_exemple}
+\end{minipage}
+\end{figure}
+
+
+
+
+\subsection{ Sheeps Arguing with Tornado }
+En se basant sur le programme précédent, 
+un programme qui pour toute configuration de la Figure 1 (sauf la 6 et la
+4), \\
+teste s’il est possible d’atteindre une configuration du même plateau
+mais qui contient une seule bille là où au départ il n’y avait pas de bille.\\
+
+
+\subsubsection{function}
+
+\begin{figure}[H]
+\begin{minipage}{\textwidth}
+  \centering	
+	\begin{lstlisting}
+	function tornado(m1, m2) 
+    \end{lstlisting}
+  \label{fig:code_exemple}
+\end{minipage}
+\end{figure}
+
+\paragraph{paragraph}:
+    paragraph
+    
+  
+
+\section{Résultats}
+\begin{center}
+\begin{tabular}{|c|c|c|c|
+                |c|c|c|c|}
+\hline
+plateau taille & quantité billes & Mirror & Tornado \\
+\hline
+              &                &       &\\
+             &                &               & \\
+             &                &               & \\
+             &                &               & \\
+\hline
+             &                &              & \\
+\hline
+\end{tabular}
+\end{center}
+
+
+
+\begin{figure}[H]
+  \centering
+	\includegraphics[scale=0.8]{img/Figure_1.png}
+  \label{fig:logo}
+\end{figure}
+
+\newpage
+
+\section{Discussion}
+    
+
+\section{Conclusion}
+
+
+\end{document}
