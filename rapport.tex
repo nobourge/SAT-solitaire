@@ -15,6 +15,84 @@
 
 \usepackage{fullpage}
 
+%------------------------------------------------------
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{color0}{RGB}{147, 147, 147} %<--- I've changed this to make it more visible
+\definecolor{color1}{RGB}{186, 033, 033}
+\definecolor{color2}{RGB}{000, 128, 000}
+\definecolor{color3}{RGB}{064, 128, 128}
+\definecolor{color4}{RGB}{170, 034, 255}
+
+\lstdefinelanguage{clips}{
+  mathescape = true,
+  sensitive        = true,
+  morecomment      = [l]{;},
+  showstringspaces = false,
+  morestring       = [b]",
+}
+
+% egreg's modulo macro (see https://tex.stackexchange.com/a/34449/21891)
+\def\truncdiv#1#2{((#1-(#2-1)/2)/#2)}
+\def\moduloop#1#2{(#1-\truncdiv{#1}{#2}*#2)}
+\def\modulo#1#2{\number\numexpr\moduloop{#1}{#2}\relax}
+
+
+\makeatletter
+
+% a TeX counter to keep track of the nesting level
+\newcount\netParensCount@clisp
+
+% Modify how ( and ) get typeset depending on the value of the counter
+% (Based on Ulrike Fischer's approach to modifying characters in listings;
+% see https://tex.stackexchange.com/a/231927/21891)
+\lst@CCPutMacro
+\lst@ProcessOther{`(}{{%
+  \ifnum\lst@mode=\lst@Pmode\relax%
+    \rainbow@clisp{(}%
+    \global\advance\netParensCount@clisp by \@ne%
+  \else
+    (%
+  \fi
+}}%
+\lst@ProcessOther{`)}{{%
+  \ifnum\lst@mode=\lst@Pmode\relax%
+    \global\advance\netParensCount@clisp by \m@ne%
+    \rainbow@clisp{)}%
+  \else
+    )%
+  \fi
+}}%
+\@empty\z@\@empty
+
+% Color its argument based on the value of the \netParensCount@clisp counter
+% (modulo 5)
+\newcommand\rainbow@clisp[1]{%
+  \ifcase\modulo\netParensCount@clisp 5\relax%
+    \textcolor{color0}{#1}%
+  \or
+    \textcolor{color1}{#1}%
+  \or
+    \textcolor{color2}{#1}%
+  \or
+    \textcolor{color3}{#1}%
+  \else
+    \textcolor{color4}{#1}%
+  \fi
+}
+
+\lst@AddToHook{PreInit}{%
+  \global\netParensCount@clisp 0\relax%
+}
+
+\makeatother
+
+\lstnewenvironment{clips-code}
+  {\lstset{language=clips}}
+  {}
+
 
 % -----------------------------------------------------
 
@@ -70,19 +148,20 @@ On commence par définir les variables de nos formules.
 \\La variable x$_i,_j,_k$
 \\vaut “Vrai” si le nombre k est à la ligne i, colonne j.
 
-\subsubsection{Une valeur par case}
+\subsubsection{Exactement une valeur par case}
 On note que la nature du problème impose des contraintes qui ne sont pas notées dans l’énoncé.
-\\Par exemple, dans chaque case (i, j), il ne peut y avoir qu’une seule valeur k.
+\\Par exemple, dans chaque case (i, j), il doit y avoir exactement une seule valeur k.
 
 En d’autre termes pour tout i,
 pour tout j, pour tout k != k'
-, on n’a pas x$_i,_j,_k$ ∧ x$_i,_j,_{k^\prime}$.
-
-\overset{N}{\underset{i=1}{\bigwedge}}
+, on n’a pas $x_{i,j,k} ~ \land ~ x_{i,j,{k^\prime}}$.
+\newline
+$\overset{N}{\underset{i=1}{\bigwedge}}
 ~~\overset{N}{\underset{j=1}{\bigwedge}}
-~~\underset{0<={k,k'}<=1}{\bigwedge}
-¬x$_i,_j,_k$ ~ \lor ~ ¬x$_i,_j,_{k^\prime}$
-
+(
+~~\underset{-1<={k,k'}<=1}{\bigwedge}
+\neg x_{i,j,k} ~ \lor ~ \neg x_{i,j,{k^\prime}})
+ ~ \land ~ (x_{i,j,-1} ~ \lor ~ x_{i,j,0} ~ \lor ~ x_{i,j,1})$
 \subsubsection{Coup}
 
 \paragraph{Voisin}
@@ -91,7 +170,7 @@ On commence par définir ce qu’est un voisin : il s’agit d’une autre case 
 Avec L le nombre de lignes de M
 \\et C le nombre de colonnes de M,
 
-V (i, j) = {(i', j') \in [1, N]^2| max(|i - i'|, |j - j'| = 1)}
+$V (i, j) = {(i', j') \in [1, N]^2| max(|i - i'|, |j - j'| = 1)}$
 
 
 \subparagraph{sur même ligne}
@@ -99,13 +178,13 @@ Considérant une case (i,j)
 alors une voisine se trouve en (i,j-1)
 et l'autre en (i,j+1)
 
-Considérant une case x$_i,_j,_k$, alors une voisine se trouve en x$_i,_{j-1},_{k^\prime}$ et l'autre en x$_i,_{j+1},_{k^{\prime\prime}}$
+Considérant une case x$_{i,j,k}$, alors une voisine se trouve en x$_{i,j-1,k^\prime}$ et l'autre en x$_{i,j+1,k^{\prime\prime}}$
 
-(x$_{i,{j-1},k}$ \lor ~~ x$_{i,{j-1},{k^\prime}}$ )
+$(x_{i,j-1,k} \lor ~~ x_{i,j-1,k^\prime} )
 \land ~~
-x$_i,_j,_k$
+x_i,_j,_k
 \land ~~
-(x$_{i,{j+1},{k^{\prime}}}$ \lor ~~ x$_{i,{j+1},k}$)
+(x_{i,j+1,k^\prime} \lor ~~ x_{i,j+1,k})$
 
 
 \subparagraph{sur même colonne}
@@ -113,48 +192,43 @@ Considérant une case (i,j)
 alors une voisine se trouve en (i-1,j)
 et l'autre en (i+1,j)
 
-variable x$_i,_j,_k$,
-alors une voisine se trouve en x$_{i-1},_j,_{k^\prime}$ et l'autre en x$_{i+1},_j,_{k^{\prime\prime}}$
+variable x$_{i,j,k}$,
+alors une voisine se trouve en x$_{i-1,j,k^\prime}$ et l'autre en x$_{i+1,j,k^{\prime\prime}}$
 
-(x$_{{i-1},j,1}$ \lor ~~ x$_{{i-1},j,0}$ )
+$(x_{i-1,j,1} \lor ~~ x_{i-1,j,0} )
 \land ~~
-x$_{i,j,1}$
+x_{i,j,1}
 \land ~~
-(x$_{{i+1},j,0}$ \lor ~~ x$_{{i+1},j,1}$)
+(x_{i+1,j,0} \lor ~~ x_{i+1,j,1})$
 
 \subparagraph{non-case}
 Considérant une case (i,j)
 variable
 x$_{i,j,k}$,
 les cases aux positions
-(i,j-1) variable x$_{i,{j-1},k}$
-et (i,j+1) variable x$_{i,{j+1},{k^ {\prime} } }$,
+(i,j-1) variable x$_{i,j-1,k}$
+et (i,j+1) variable x$_{i,j+1,k^\prime}$,
 sont des voisines
 si et seulement si k,$k^ {\prime}$ != -1
 
 \subparagraph{Jouer un coup}
-Si on peut jouer un coup, alors, considérant une bille à la position (i,j) x$_{i,j,k}$, une de ses voisines
+Si on peut jouer un coup, alors,
+considérant une bille à la position (i,j) x$_{i,j,k}$,
+une de ses voisines
 a forcément k = 1 et l'autre k = 0.\newline
+
 Soit si x$_{i,j-1,1}$, x$_{i,j,1}$ et x$_{i,j+1,0}$, alors on peut jouer un coup tel que x$_{i,j-1,0}$, x$_{i,j,0}$ et x$_{i,j+1,1}$
+\newline
 
-\bigskip
+\begin{clips-code}
+    ((($x_{i,j-1,1} \land \neg x_{i,j+1,1}$) $\lor$ ($ x_{i,j-1,0} \land \neg x_{i,j+1,0}$)) $\land$ (($x_{i-1,j,1} \land \neg x_{i+1,j,1}$) $\lor$ ($ x_{i-1,j,0} \land \negx_{i+1,j,0}$)))
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-((X$_{i,{j-1},1}$ \lor ~~ X$_{i,{j-1},0}$ )
-\lor ~~
-\\ (X$_{{i-1},j,1}$ \lor ~~ X$_{{i-1},j,0}$ ))
-\land ~~~~~~~
-Y$_{i,j,1}$
-~~~~~~~~~~~~~~~~~~~~~~~~~~ \land ~~
-((Z$_{i,{j+1},0}$ \lor ~~ Z$_{i,{j+1},1}$)
-\lor
-\\~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(Z$_{{i+1},j,0}$ \lor ~~ Z$_{{i+1},j,1}$))
+    $\land$ ($x_{i,j,1}$)
 
-\land ~~
-ñot (xk = 0 \land zk = 0)
-\land ~~
-ñot (xk = 1 \land zk = 1)
+    $\land$ $\neg$($ x_{i,j-1,-1} \lor x_{i-1,j,-1} \lor x_{i,j,-1} \lor x_{i,j+1,-1} \lor x_{i+1,j,-1}$)
+
+
+\end{clips-code}
 
 % -----------------------------------------------------
 \newpage
