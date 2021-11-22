@@ -224,11 +224,19 @@ Soit si x$_{i,j-1,1}$, x$_{i,j,1}$ et x$_{i,j+1,0}$, alors on peut jouer un coup
     ((($x_{i,j-1,1} \land \neg x_{i,j+1,1}$) $\lor$ ($ x_{i,j-1,0} \land \neg x_{i,j+1,0}$)) $\land$ (($x_{i-1,j,1} \land \neg x_{i+1,j,1}$) $\lor$ ($ x_{i-1,j,0} \land \negx_{i+1,j,0}$)))
 
     $\land$ ($x_{i,j,1}$)
+------------------------------------
 
-    $\land$ $\neg$($ x_{i,j-1,-1} \lor x_{i-1,j,-1} \lor x_{i,j,-1} \lor x_{i,j+1,-1} \lor x_{i+1,j,-1}$)
+    ((($ x_{i,j-1,1}  \land x_{i,j+1,0} \land y_{i,j-1,0} \land y_{i,j+1,1} $) $\lor$ ($ x_{i,j-1,0} \land x_{i,j+1,1} \land y_{i,j-1,1} \land y_{i,j+1,0}$))
+    $\lor$
+    (($x_{i-1,j,1} \land x_{i+1,j,0} \land y_{i-1,j,0} \land y_{i+1,j,1}$) $\lor$ ($ x_{i-1,j,0} \land x_{i+1,j,1} \land y_{i-1,j,1} \land y_{i+1,j,0}$)))
+    $\land$ ($x_{i,j,1} \land x_{i,j,0}$)
+
 
 
 \end{clips-code}
+
+    % $\land$ $\neg$($ x_{i,j-1,-1} \lor x_{i-1,j,-1} \lor x_{i,j,-1}
+    % \lor x_{i,j+1,-1} \lor x_{i+1,j,-1}$)
 
 % -----------------------------------------------------
 \newpage

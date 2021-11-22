@@ -26,26 +26,30 @@ import re
 def afficher_solution(interpretation):
     for i in interpretation:
         print(i)
-#  todo
+        #  todo
 
 
 def solution(m1, m2):
     # parametres
     affichage_sol = True  # affichage d'une solution
-    test_unicite = False  # test si la solution est unique (si elle existe), sinon en donne une autre
+    test_unicite = False  # test si la solution est unique (si elle
+    # existe), sinon en donne une autre
 
     # variables ##########################
     vpool = IDPool(
-        start_from=1)  # pour le stockage des identifiants entiers des couples (i,j)
-    cnf = CNF()  # construction d'un objet formule en forme normale conjonctive (Conjunctive Normal Form)
+        start_from=1)  # pour le stockage des identifiants entiers
+
+    # des couples (i,j)
+    cnf = CNF()  # construction d'un objet formule en forme normale
+    # conjonctive (Conjunctive Normal Form)
+
     line_quantity = len(m1)
     print("line_quantity:", line_quantity)
+
     column_quantity = len(m1[0])
     print("column_quantity:", column_quantity)
 
     trous = []
-
-    # construction de la formule
 
     print("Construction des clauses\n")
 
@@ -55,7 +59,7 @@ def solution(m1, m2):
     for i in range(line_quantity):
         for j in range(column_quantity):
             v = m1[i][j]
-            if 0 < v:
+            if 0 <= v:
                 # non-case déja ok
                 print("ajout de %1d pour (%1d,%1d)" % (v, i, j))
                 cnf.append([vpool.id((i, j, m2[i][j]))])
@@ -68,8 +72,9 @@ def solution(m1, m2):
 
     # une sur la case du milieu
 
-    # bille qui se trouve sur une des extr´emit´es saute par dessus la bille du milieu, pour la faire atterrir dans le trou qui se trouve `a
-    # l’autre extr´emit´e.
+    # bille qui se trouve sur une des extr´emit´es saute par dessus
+    # la bille du milieu, pour la faire atterrir dans le trou qui se
+    # trouve `a l’autre extr´emit´e.
 
     # bille du milieu du plateau supprimée
     """
@@ -103,7 +108,7 @@ def solution(m1, m2):
     if resultat:
         if affichage_sol:
             print("\nVoici une solution: \n")
-            interpretation = solver.get_model() # extracting a
+            interpretation = solver.get_model()  # extracting a
             # satisfying assignment for CNF formula given to the solver
             # A model is provided if a previous SAT call returned True.
             # Otherwise, None is reported.
