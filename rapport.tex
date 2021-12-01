@@ -12,6 +12,7 @@
 \usepackage{listingsutf8}
 \usepackage{hyperref}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{comment}
 
 \usepackage{fullpage}
 
@@ -93,6 +94,8 @@
   {\lstset{language=clips}}
   {}
 
+\setcounter{tocdepth}{6}
+\setcounter{secnumdepth}{6}
 
 % -----------------------------------------------------
 
@@ -126,54 +129,80 @@ sur le plateau à la position (i, j); si cette valeur est égale à 0, alors il 
 trou sur le plateau `a la position (i, j), mais il n’y a pas de bille posée dessus; 
 si cette valeur est égale à 1, alors il y a un trou sur le plateau à la position (i, j) avec une bille posée dessus.
 
+\section{Tests de satisfiabilité}
+\subsection{ Données générales}
+Soit $M$ une matrice de taille $L$ (nombre de lignes) * $C$ (nombre de colonnes)
+dont les éléments sont dans \{-1, 0, 1\},
+\\$f$, le nombre d'étapes pour atteindre une certaine configuration,
+\label{nbEtapes}
+\\$s$, l'étape actuelle, de la partie, $s\in \{1,...,S\}$ et $S$. Lors d'une partie, on joue forcément un seul coup par étape, et chaque coup élimine exactement une bille. $S$ est donc égal à la différence de billes entre le plateau original et le plateau final (ou le plateau final désiré).
+\\Notons $D$, l'ensemble contenant les tuples directionnels, tel que $D=\{(1,0),(0,1),(-1,0),(0,-1)\}$
+\\$d$, un tuple dans $D$ la direction du mouvement d'un coup, avec $d_0$ le premier élément du tuple et $d_1$ le second.
 
-\section{Formule Normale Conjonctive}
-Soit n un entier, \\
-M et M' deux matrices de tailles n×n 
-dont les éléments sont dans \{-1, 0, 1\}. 
-
-
-satisfaisable si et seulement s’il est possible de passer de
-\\la configuration du Solitaire
-qui correspond à M 
-\\à 
-\\celle qui correspond à M'
-, en effectuant un ou
-plusieurs coups. 
-\subsection{Composition}
-
-\subsubsection{Variables  Booléennes}
-
+\subsection{Variables  Booléennes}
 On commence par définir les variables de nos formules. 
-\\La variable x$_i,_j,_k$
-\\vaut “Vrai” si le nombre k est à la ligne i, colonne j.
+\\La variable $x_{i,j,k,s}$
+\\vaut “Vrai” si le nombre k est à la ligne $i$, colonne $j$ à l'étape $s$. 
+\\La variable $m_{i,j,d,s}$
+\\vaut “Vrai” si la bille à déplacer dans la direction d est à la ligne $i$, colonne $j$ à l'étape $s$. 
 
-\subsubsection{Exactement une valeur par case}
-On note que la nature du problème impose des contraintes qui ne sont pas notées dans l’énoncé. 
-\\Par exemple, dans chaque case (i, j), il doit y avoir exactement une seule valeur k.
+
+\subsection{Clauses relatives au jeu}
+Nous avons 3 clauses définissant le fonctionnement du jeu.
+
+\subsubsection{L'Etat du plateau: } 
+Posons $A_s$ l'état du plateau à une étape $s\in S$, prenant en compte pour chaque position $(i,j)$, un litéral $x_k$ où $k\in \{-1,0,1\}$. \newline
+$A_s = {\underset{\substack{i\in\{1,...,L\}\\j\in\{1,...,C\}}}{\bigwedge}}({\underset{k\in\{-1,0,1\}}{\bigvee}}x_{i,j,k,s})$ \newline
+Il y a deux exceptions à cela pour le tableau de départ $A_1$ et le tableau de fin $A_S$ où les valeurs sont fixées, vu qu'on reçoit le tableau de départ en entrée, ainsi que le tableau de fin: 
+
+\newline
+
+$A_1 = {\underset{\substack{i\in\{1,...,L\}\\j\in\{1,...,C\}}}{\bigwedge}}(x_{i,j,k,1})$, 
+
+où $k\in\{-1,0,1\}$, sur base du tableau reçu, et 
+
+\newline
+
+$A_S = {\underset{\substack{i\in\{1,...,L\}\\j\in\{1,...,C\}}}{\bigwedge}}(x_{i,j,k,S})$, 
+
+où $k\in\{-1,0,1\}$, sur base du tableau reçu.
+
+\begin{comment}
+
+\subsubsection{\colorbox{orange}{non-case}}
+Considérant une case (i,j)
+variable 
+x$_{i,j,k}$, 
+les cases aux positions 
+(i,j-1) variable x$_{i,j-1,k}$ 
+et (i,j+1) variable x$_{i,j+1,k^\prime}$, 
+sont des voisines
+si et seulement si k,$k^ {\prime}$ != -1
+
+\end{comment}
+
+\subsubsection{Exactement une valeur par case: }
+Dans chaque case (i, j), il doit y avoir exactement une seule valeur k.
 
 En d’autre termes pour tout i,
 pour tout j, pour tout k != k'
 , on n’a pas $x_{i,j,k} ~ \land ~ x_{i,j,{k^\prime}}$.
 \newline
+
 $\overset{N}{\underset{i=1}{\bigwedge}}
-~~\overset{N}{\underset{j=1}{\bigwedge}}
-(
-~~\underset{-1<={k,k'}<=1}{\bigwedge}
+~~\overset{N}{\underset{j=1}{\bigwedge}}$
+$(~~\underset{-1<={k,k'}<=1}{\bigwedge}
 \neg x_{i,j,k} ~ \lor ~ \neg x_{i,j,{k^\prime}})
  ~ \land ~ (x_{i,j,-1} ~ \lor ~ x_{i,j,0} ~ \lor ~ x_{i,j,1})$
-\subsubsection{Coup}
-
-\paragraph{Voisin}
-On commence par définir ce qu’est un voisin : il s’agit d’une autre case dont les coordonnées ne sont pas éloignées de plus de 1.
-
-Avec L le nombre de lignes de M
-\\et C le nombre de colonnes de M,
+ 
+\begin{comment}
+ 
+\subsubsection{\colorbox{orange}{Voisin}}
+On commence par définir ce qu’est un voisin : 
+il s’agit d’une autre case dont les coordonnées ne sont pas éloignées de plus de 1.
 
 $V (i, j) = {(i', j') \in [1, N]^2| max(|i - i'|, |j - j'| = 1)}$
  
- 
-\subparagraph{sur même ligne}
 Considérant une case (i,j) 
 alors une voisine se trouve en (i,j-1) 
 et l'autre en (i,j+1) 
@@ -186,14 +215,26 @@ x_i,_j,_k
 \land ~~
 (x_{i,j+1,k^\prime} \lor ~~ x_{i,j+1,k})$
 
+\paragraph{sur même ligne}
+Considérant une case (i,j) 
+alors une voisine se trouve en (i,j-1) 
+et l'autre en (i,j+1) 
 
-\subparagraph{sur même colonne}
+
+%Si une variable x$_{i,j,k}$, 
+%alors une voisine est %x$_{i,j-1,k^\prime}$ et l'autre en %x$_{i,j+1,k^{\prime}}$
+
+$x_{i,j,1} \land ~~ 
+((x_{i,j-1,1} \land x_{i,j+1,0}) \lor 
+~~ (x_{i,j-1,0} \land x_{i,j+1,1}))$
+
+\paragraph{sur même colonne}
 Considérant une case (i,j) 
 alors une voisine se trouve en (i-1,j) 
 et l'autre en (i+1,j) 
 
-variable x$_{i,j,k}$, 
-alors une voisine se trouve en x$_{i-1,j,k^\prime}$ et l'autre en x$_{i+1,j,k^{\prime\prime}}$
+%variable x$_{i,j,k}$, 
+%alors une voisine se trouve en %x$_{i-1,j,k^\prime}$ et l'autre en %x$_{i+1,j,k^{\prime\prime}}$
 
 $(x_{i-1,j,1} \lor ~~ x_{i-1,j,0} )
 \land ~~
@@ -201,17 +242,72 @@ x_{i,j,1}
 \land ~~
 (x_{i+1,j,0} \lor ~~ x_{i+1,j,1})$
 
-\subparagraph{non-case}
-Considérant une case (i,j)
-variable 
-x$_{i,j,k}$, 
-les cases aux positions 
-(i,j-1) variable x$_{i,j-1,k}$ 
-et (i,j+1) variable x$_{i,j+1,k^\prime}$, 
-sont des voisines
-si et seulement si k,$k^ {\prime}$ != -1
+\end{comment}
 
-\subparagraph{Jouer un coup}
+\subsubsection{Clauses temporelle}
+Ces clauses servent à verifier l'intégrite du plateau d'une étape à la prochaine, en effet il faut correctement déterminer l'état d'une case en fonction des étapes passées. \newline
+
+Une première serait: Si à l'étape $s-1$, une case n'avait pas de bille ($k=0$) et que le coup approprié (à une distance de deux par rapport à la case en question dans la direction opposée du coup) a été joué, alors cette case a à présent une bille ($k=1$):\newline
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}((x_{i,j,0,s-1} \wedge ({\underset{d\in D}{\bigvee}}m_{i-2*d_0,j-2*d_1,d,s-1}))\rightarrow x_{i,j,1,s})$\newline
+
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}(\neg(x_{i,j,0,s-1} \wedge ({\underset{d\in D}{\bigvee}}m_{i-2*d_0,j-2*d_1,d,s-1}))\vee x_{i,j,1,s})$\newline
+
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}(\neg x_{i,j,0,s-1} \vee \neg({\underset{d\in D}{\bigvee}}m_{i-2*d_0,j-2*d_1,d,s-1})\vee x_{i,j,1,s})$\newline
+
+La seconde serait: Si à l'étape $s-1$, une case avait une bille ($k=1$) et que le coup approprié (à une distance de un par rapport à la case en question dans la direction opposée du coup) a été joué, alors cette case n'a à présent plus de bille ($k=0$): \newline
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}((x_{i,j,1,s-1} \wedge ({\underset{d\in D}{\bigvee}}m_{i-d_0,j-d_1,d,s-1}))\rightarrow x_{i,j,0,s})$\newline
+
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}(\neg(x_{i,j,1,s-1} \wedge ({\underset{d\in D}{\bigvee}}m_{i-d_0,j-d_1,d,s-1}))\vee x_{i,j,0,s})$\newline
+
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}(\neg x_{i,j,1,s-1} \vee \neg({\underset{d\in D}{\bigvee}}m_{i-d_0,j-d_1,d,s-1})\vee x_{i,j,0,s})$\newline
+
+\subsection{Déroulement d'une partie}
+Considérons donc le cas général avec deux matrices, M et M'. Chacune représente un plateau de jeu à un certain état, M étant l'état de départ et M' l'état de fin ciblé. On peut savoir le nombre d'étapes $S$ nécessaire pour passer de M à M' en calculant la différence du nombre de billes entre les deux plateaux (voir \textbf{\nameref{nbEtapes}}), soit la différence de cases valant 1 dans les matrices.
+\newline
+La matrice M, nous permet donc de déduire $A_1$ et la matrice M' de déduire $A_S$.
+\newline
+Si on a un plateau $A_s$ alors on avait avant un plateau $A_{s-1}$ et un coup joué $m_{s-1}$. 
+
+\begin{comment}
+\subsubsection{\colorbox{red}{Coup}}
+Nous avons défini un coup plus haut,
+mais pour effectivement en jouer un,
+il faut prendre en compte plusieurs
+choses,
+notamment, l'état du plateau, les
+voisins en fonction de la direction
+du coup, et bel et bien le fait
+qu'on ne joue qu'un coup par
+tour.\newline
+Chaque tour un ensemble de coups
+peuvent potentiellement être joués,
+définissons la clause $J_s$,
+l'ensemble des coups jouable à une
+étape s.\newline
+Pour chaque position (i,j) et chaque
+direction d, nous pouvons jouer un
+coup, si on ne joue pas d'autre coup
+et que les voisins adéquats sont
+bien une bille comme voisin direct
+et un trou pour le voisin
+d'après.
+\newline
+$J_s = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ d\in D}}{\bigwedge}}((m_{i,j,d,s}\rightarrow (\neg ({\underset{d'\neq d ;i',j' \neq i,j}{\bigvee}}m_{i',j',d',s})\wegde {\underset{(i',j',k)\in \{(i,j,1);(i+d_0,j+d_1,1);(i+2*d_0,j+2*d_1,0)\}}{\bigwedge}}x_{i',j',k,s})$
+\newline
+---------------------
+\newline
+
+$J_s = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\}}}{\bigwedge}}       
+( \underset{d \in D }{\bigvee} (m_{i,j,d,s}\rightarrow \wegde {\underset{(i',j',k)\in \{(i,j,1);(i+d_0,j+d_1,1);(i+2*d_0,j+2*d_1,0)\}}{\bigwedge}}x_{i',j',k,s}))$
+\newline
+-----------------------
+\newline
+Qu'on peut transformer en: \newline
+\newline
+$J_s = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ d\in D}}{\bigwedge}}((\neg m_{i,j,d,s}\vee (\neg ({\underset{d'\neq d ;i',j' \neq i,j}{\bigvee}}m_{i',j',d',s} \vee {\underset{(i',j',k)\in \{(i,j,1);(i+d_0,j+d_1,1);(i+2*d_0,j+2*d_1,0)\}}{\bigwedge}}x_{i',j',k,s})))$
+\newline
+
+\subsubsection{\colorbox{red}{Jouer un coup}}
 Si on peut jouer un coup, alors, 
 considérant une bille à la position (i,j) x$_{i,j,k}$, 
 une de ses voisines
@@ -224,11 +320,96 @@ Soit si x$_{i,j-1,1}$, x$_{i,j,1}$ et x$_{i,j+1,0}$, alors on peut jouer un coup
     ((($x_{i,j-1,1} \land \neg x_{i,j+1,1}$) $\lor$ ($ x_{i,j-1,0} \land \neg x_{i,j+1,0}$)) $\land$ (($x_{i-1,j,1} \land \neg x_{i+1,j,1}$) $\lor$ ($ x_{i-1,j,0} \land \negx_{i+1,j,0}$)))
     
     $\land$ ($x_{i,j,1}$) 
+------------------------------------
 
-    $\land$ $\neg$($ x_{i,j-1,-1} \lor x_{i-1,j,-1} \lor x_{i,j,-1} \lor x_{i,j+1,-1} \lor x_{i+1,j,-1}$)
-
+    ((($ x_{i,j-1,1,s}  \land x_{i,j+1,0,s} \land x_{i,j-1,0,s+1} \land x_{i,j+1,1,s+1} $) $\lor$ ($ x_{i,j-1,0,s} \land x_{i,j+1,1,s} \land x_{i,j-1,1,s+1} \land x_{i,j+1,0,s+1}$)) 
+    $\lor$
+    (($x_{i-1,j,1,s} \land x_{i+1,j,0,s} \land x_{i-1,j,0,s+1} \land x_{i+1,j,1,s+1}$) $\lor$ ($ x_{i-1,j,0,s} \land x_{i+1,j,1,s} \land x_{i-1,j,1,s+1} \land x_{i+1,j,0,s+1}$)))
+    $\land$ ($x_{i,j,1,s} \land x_{i,j,0,s}$) 
 
 \end{clips-code}
+
+    % $\land$ $\neg$($ x_{i,j-1,-1} \lor x_{i-1,j,-1} \lor x_{i,j,-1} 
+    % \lor x_{i,j+1,-1} \lor x_{i+1,j,-1}$)
+\end{comment}
+
+\subsection{ Mirroir }
+Soit M' une matrice de même taille
+dont les éléments sont aussi dans \{-1, 0, 1\},
+On veut savoir si il est possible de passer de
+la configuration du Solitaire
+qui correspond à M 
+à celle qui correspond à M'
+, en effectuant un ou
+plusieurs coups. 
+
+\subsubsection{Clauses relatives au problème}
+
+\[
+\mathop{\mathbb{\bigwedge}}_{\substack{i \in \{1,..,L\},\\ j \in \{1,..,C\}}} x_{i,j, M'_{i,j}, f}
+\]
+
+\subsubsection{Formule Normale Conjonctive}
+\textcolor{red}{(Question 1)}
+\paragraph{Composition}
+
+\subsubsection{Fonction "Solution"}
+\textcolor{red}{(Question 2)}
+
+\newpage
+
+\subsection{ Dernière bille }
+\subsubsection{Dans le trou de départ}
+En se basant sur le programme précédent, 
+un programme qui pour toute configuration de la Figure 1 (sauf la 6 et la
+4), \\
+teste s’il est possible d’atteindre une configuration du même plateau
+mais qui contient une seule bille là où au départ il n’y avait pas de bille.
+
+\paragraph{Clauses relatives au problème}
+Le plateau final contient une seule bille là où au départ il n’y avait pas de bille.
+Autrement dit, 
+\\le 0 devient 1,
+\\les 1 deviennent 0,
+\\les -1 restent -1,
+
+\[
+\mathop{\mathbb{\bigwedge}}_{\substack{i \in \{1,..,L\},\\ j \in \{1,..,C\}}} x_{i,j, -\frac{M_{i,j} - 3(M_{i,j})^2}{2} + 1, f}
+\]
+
+\paragraph{Résultats}
+\textcolor{red}{(Question 3)}
+
+
+\subsubsection{ Peu importe où}
+\paragraph{Clauses relatives au problème}
+
+\paragraph{Résultats}
+\textcolor{red}{(Question 4)}
+
+
+\subsubsection{stratégie pour chaque possibilit´e de placer le trou au d´ebut}
+\textcolor{red}{(Question 5)}
+
+Pour le premier plateau de la Figure 1, on voudrait tester pour chaque possibilit´e de placer la trou au d´ebut, s’il existe une strat´egie pour n’avoir plus
+qu’une seule bille `a la fin, plac´ee sur le trou de d´epart. Math´ematiquement,
+4
+consid´erons les matrices de la forme
+o`u chaque bi ∈ {0, 1}. Pour tout i ∈ {1, . . . , 37}, on pose Mi
+la matrice
+o`u bi = 0 et bj = 1, pour tout j ∈ {1, . . . , 37} \ i. On pose ´egalement M0
+i
+le dual de Mi
+: le 0 de Mi est reamplac´e par 1, et tous les 1 par des 0.
+On veut maintenant construire la matrice R suivante: pour tout i ∈
+{1, . . . , 37}, bi = 1 s’il existe une strat´egie pour passer de Mi `a M0
+i
+, sinon
+bi = 0. Faire un programme qui calcule et affiche la matrice R, en utilsant
+les questions pr´ec´edentes. Si le temps de calcul est trop long, vous pouvez
+consid´erer un plateau de dimension inf´erieure.
+\paragraph{Clauses relatives au problème}
+
 
 % -----------------------------------------------------
 \newpage
@@ -252,12 +433,7 @@ Soit si x$_{i,j-1,1}$, x$_{i,j,1}$ et x$_{i,j+1,0}$, alors on peut jouer un coup
 
 
 
-\subsection{ Sheeps Arguing with Tornado }
-En se basant sur le programme précédent, 
-un programme qui pour toute configuration de la Figure 1 (sauf la 6 et la
-4), \\
-teste s’il est possible d’atteindre une configuration du même plateau
-mais qui contient une seule bille là où au départ il n’y avait pas de bille.\\
+
 
 
 \subsubsection{function}
