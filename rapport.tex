@@ -248,18 +248,18 @@ x_{i,j,1}
 Ces clauses servent à verifier l'intégrite du plateau d'une étape à la prochaine, en effet il faut correctement déterminer l'état d'une case en fonction des étapes passées. \newline
 
 Une première serait: Si à l'étape $s-1$, une case n'avait pas de bille ($k=0$) et que le coup approprié (à une distance de deux par rapport à la case en question dans la direction opposée du coup) a été joué, alors cette case a à présent une bille ($k=1$):\newline
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}((x_{i,j,0,s-1} \wedge ({\underset{d\in D}{\bigvee}}m_{i-2*d_0,j-2*d_1,d,s-1}))\rightarrow x_{i,j,1,s})$\newline
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}((x_{i,j,0,s-1} \wedge m_{i-2*d_0,j-2*d_1,d,s-1})\rightarrow x_{i,j,1,s})$\newline
 
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}(\neg(x_{i,j,0,s-1} \wedge ({\underset{d\in D}{\bigvee}}m_{i-2*d_0,j-2*d_1,d,s-1}))\vee x_{i,j,1,s})$\newline
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}(\neg(x_{i,j,0,s-1} \wedge m_{i-2*d_0,j-2*d_1,d,s-1})\vee x_{i,j,1,s})$\newline
 
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}(\neg x_{i,j,0,s-1} \vee \neg({\underset{d\in D}{\bigvee}}m_{i-2*d_0,j-2*d_1,d,s-1})\vee x_{i,j,1,s})$\newline
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}(\neg x_{i,j,0,s-1} \vee \neg m_{i-2*d_0,j-2*d_1,d,s-1}\vee x_{i,j,1,s})$\newline
 
 La seconde serait: Si à l'étape $s-1$, une case avait une bille ($k=1$) et que le coup approprié (à une distance de un par rapport à la case en question dans la direction opposée du coup) a été joué, alors cette case n'a à présent plus de bille ($k=0$): \newline
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}((x_{i,j,1,s-1} \wedge ({\underset{d\in D}{\bigvee}}m_{i-d_0,j-d_1,d,s-1}))\rightarrow x_{i,j,0,s})$\newline
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}((x_{i,j,1,s-1} \wedge m_{i-d_0,j-d_1,d,s-1})\rightarrow x_{i,j,0,s})$\newline
 
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}(\neg(x_{i,j,1,s-1} \wedge ({\underset{d\in D}{\bigvee}}m_{i-d_0,j-d_1,d,s-1}))\vee x_{i,j,0,s})$\newline
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}(\neg(x_{i,j,1,s-1} \wedge m_{i-d_0,j-d_1,d,s-1})\vee x_{i,j,0,s})$\newline
 
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}}}{\bigwedge}}(\neg x_{i,j,1,s-1} \vee \neg({\underset{d\in D}{\bigvee}}m_{i-d_0,j-d_1,d,s-1})\vee x_{i,j,0,s})$\newline
+$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}(\neg x_{i,j,1,s-1} \vee \neg m_{i-d_0,j-d_1,d,s-1}\vee x_{i,j,0,s})$\newline
 
 \subsection{Déroulement d'une partie}
 Considérons donc le cas général avec deux matrices, M et M'. Chacune représente un plateau de jeu à un certain état, M étant l'état de départ et M' l'état de fin ciblé. On peut savoir le nombre d'étapes $S$ nécessaire pour passer de M à M' en calculant la différence du nombre de billes entre les deux plateaux (voir \textbf{\nameref{nbEtapes}}), soit la différence de cases valant 1 dans les matrices.

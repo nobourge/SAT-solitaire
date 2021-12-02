@@ -45,6 +45,9 @@ def solution(m1, m2):
 
     trous = []
 
+    # Données générales
+    D = [(1,0),(0,1),(-1,0),(0,-1)]
+
     # construction de la formule
 
     print("Construction des clauses\n")
@@ -68,7 +71,23 @@ def solution(m1, m2):
 
     # Clauses temporelles
 
+        # Première, apparition d'une bille
+    for i in range (line_quantity):
+        for j in range (column_quantity):
+            for s in range (1,steps_quantity+1):
+                for d in D:
+                    cnf.append([-vpool.id((i,j,0,s-1)), -vpool.id((i-2*d[0],j-2*d[1],d,s-1)), vpool.id((i,j,1,s))])
+    
+        # Seconde, disparition d'une bille
+    for i in range (line_quantity):
+        for j in range (column_quantity):
+            for s in range (1,steps_quantity+1):
+                for d in D:
+                    cnf.append([-vpool.id((i,j,1,s-1)), -vpool.id((i-d[0],j-d[1],d,s-1)), vpool.id((i,j,0,s))])
+
     # Max un coup par étape
+
+    
 
     """
     # au plus une valeur par case (contrainte pas necessaire car elle est une consequence des autres)
