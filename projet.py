@@ -49,7 +49,9 @@ def solution(m1, m2):
 
     print("Construction des clauses\n")
 
-    # contraintes
+    #=============|
+    # contraintes |
+    #=============|
 
     # finales
     for i in range(line_quantity):
@@ -60,18 +62,14 @@ def solution(m1, m2):
                 print("ajout de %1d pour (%1d,%1d)" % (v, i, j))
                 cnf.append([vpool.id((i, j, m2[i][j]))])
 
-    # trois cases adjacentes
+    # Etat du plateau
 
-    # sur une même ligne ou colonne
+    # Maximum une valeur par case
 
-    # deux billes
+    # Clauses temporelles
 
-    # une sur la case du milieu
+    # Max un coup par étape
 
-    # bille qui se trouve sur une des extr´emit´es saute par dessus la bille du milieu, pour la faire atterrir dans le trou qui se trouve `a
-    # l’autre extr´emit´e.
-
-    # bille du milieu du plateau supprimée
     """
     # au plus une valeur par case (contrainte pas necessaire car elle est une consequence des autres)
     # permet d'accelerer la resolution
