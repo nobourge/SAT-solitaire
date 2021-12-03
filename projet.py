@@ -96,13 +96,11 @@ def solution(m1, m2):
     print("Maximum une valeur par case")
     for i in range(line_quantity):
         for j in range(column_quantity):
-            for s in range(0, steps_quantity + 1):
+            for s in range(1, steps_quantity):
                 for v1 in range(-1, 2):
                     for v2 in range(v1 + 1, 2):
-                        for v3 in range(v2 + 1, 2):
-                            cnf.append([-vpool.id((i, j, v1 + 1)),
-                                        -vpool.id((i, j, v2 + 1)),
-                                        -vpool.id((i, j, v3 + 1))])
+                        cnf.append([-vpool.id((i, j, v1)),
+                                    -vpool.id((i, j, v2))])
 
     # Clauses temporelles
 
@@ -111,7 +109,8 @@ def solution(m1, m2):
         for j in range(column_quantity):
             for s in range(1, steps_quantity + 1):
                 for d in D:
-                    cnf.append([-vpool.id((i, j, 0, s - 1)), -vpool.id(
+                    cnf.append([-vpool.id((i, j, 0, s - 1)),
+                                -vpool.id(
                         (i - 2 * d[0], j - 2 * d[1], d, s - 1)),
                                 vpool.id((i, j, 1, s))])
 
@@ -120,26 +119,13 @@ def solution(m1, m2):
         for j in range(column_quantity):
             for s in range(1, steps_quantity + 1):
                 for d in D:
-                    cnf.append([-vpool.id((i, j, 1, s - 1)), -vpool.id(
+                    cnf.append([-vpool.id((i, j, 1, s - 1)),
+                                -vpool.id(
                         (i - d[0], j - d[1], d, s - 1)),
                                 vpool.id((i, j, 0, s))])
 
     # Max un coup par étape
 
-    """
-    # au plus une valeur par case (contrainte pas necessaire car elle 
-    est une consequence des autres)
-    # permet d'accelerer la resolution
-
-    print("Au plus une valeur par case")
-
-    for i in range(line_quantity):
-        for j in range(column_quantity):
-            for v1 in range(2):
-                for v2 in range(v1 + 1, 2):
-                    cnf.append([-vpool.id((i, j, v1 + 1)),
-                                -vpool.id((i, j, v2 + 1))])
-    """
     print("clauses quantity:", cnf.nv)
     print("clauses:", cnf.clauses)
 
