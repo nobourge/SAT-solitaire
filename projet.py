@@ -126,6 +126,28 @@ def solution(m1, m2):
 
     # Max un coup par étape
 
+    for s in range (steps_quantity):
+        for i in range (line_quantity):
+            for j in range (column_quantity):
+                    for d in D:
+                        for ip in range (line_quantity):
+                            for jp in range (column_quantity):
+                                for dp in D:
+                                    if ip==i and jp==j and dp==d:
+                                        pass
+                                    else:
+                                        cnf.append([-vpool.id((i,j,d,s)), -vpool.id((ip,jp,dp,s))])
+
+    # Au moins 1 coup par étape
+
+    for s in range (steps_quantity):
+        clauses = []
+        for i in range(line_quantity):
+            for j in range (column_quantity):
+                for d in D:
+                    clauses.append(vpool.id((i,j,d,s)))
+        cnf.append(clauses)
+
     print("clauses quantity:", cnf.nv)
     print("clauses:", cnf.clauses)
 
