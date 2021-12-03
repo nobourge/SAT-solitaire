@@ -26,6 +26,8 @@ import re
 def afficher_solution(interpretation):
     for i in interpretation:
         print(i)
+
+
 #  todo
 
 
@@ -46,51 +48,87 @@ def solution(m1, m2):
     trous = []
 
     # Données générales
-    D = [(1,0),(0,1),(-1,0),(0,-1)]
+    D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
     # construction de la formule
 
     print("Construction des clauses\n")
 
-    #=============|
+    # =============|
     # contraintes |
-    #=============|
-
-    # finales
-    for i in range(line_quantity):
-        for j in range(column_quantity):
-            v = m1[i][j]
-            if 0 < v:
-                # non-case déja ok
-                print("ajout de %1d pour (%1d,%1d)" % (v, i, j))
-                cnf.append([vpool.id((i, j, m2[i][j]))])
+    # =============|
 
     # Etat du plateau
 
+    steps_quantity = 0
+    for i in m1:
+        steps_quantity += i.count(1)
+    for i in m2:
+        steps_quantity -= i.count(1)
+    print("le nombre d’ étapes pour passer de m1 à m2:",
+          steps_quantity)
+
+    # les valeurs du tableau de d́epart A1 et du tableau de fin AS
+    # sont fix́ees
+    for i in range(line_quantity):
+        for j in range(column_quantity):
+            vm1 = m1[i][j]
+            vm2 = m2[i][j]
+            print("ajout de %1d pour (%1d,%1d,%1d)" % (vm1,
+                                                       i,
+                                                       j,
+                                                       0))
+            cnf.append([vpool.id((i,
+                                  j,
+                                  vm1,
+                                  0))])
+            print("ajout de %1d pour (%1d,%1d,%1d)" % (vm2,
+                                                       i,
+                                                       j,
+                                                       steps_quantity))
+            cnf.append([vpool.id((i,
+                                  j,
+                                  vm2,
+                                  steps_quantity))])
+
     # Maximum une valeur par case
+
+    print("Maximum une valeur par case")
+    for i in range(line_quantity):
+        for j in range(column_quantity):
+            for s in range(0, steps_quantity + 1):
+                for v1 in range(-1, 2):
+                    for v2 in range(v1 + 1, 2):
+                        for v3 in range(v2 + 1, 2):
+                            cnf.append([-vpool.id((i, j, v1 + 1)),
+                                        -vpool.id((i, j, v2 + 1)),
+                                        -vpool.id((i, j, v3 + 1))])
 
     # Clauses temporelles
 
         # Première, apparition d'une bille
-    for i in range (line_quantity):
-        for j in range (column_quantity):
-            for s in range (1,steps_quantity+1):
+    for i in range(line_quantity):
+        for j in range(column_quantity):
+            for s in range(1, steps_quantity + 1):
                 for d in D:
-                    cnf.append([-vpool.id((i,j,0,s-1)), -vpool.id((i-2*d[0],j-2*d[1],d,s-1)), vpool.id((i,j,1,s))])
-    
+                    cnf.append([-vpool.id((i, j, 0, s - 1)), -vpool.id(
+                        (i - 2 * d[0], j - 2 * d[1], d, s - 1)),
+                                vpool.id((i, j, 1, s))])
+
         # Seconde, disparition d'une bille
-    for i in range (line_quantity):
-        for j in range (column_quantity):
-            for s in range (1,steps_quantity+1):
+    for i in range(line_quantity):
+        for j in range(column_quantity):
+            for s in range(1, steps_quantity + 1):
                 for d in D:
-                    cnf.append([-vpool.id((i,j,1,s-1)), -vpool.id((i-d[0],j-d[1],d,s-1)), vpool.id((i,j,0,s))])
+                    cnf.append([-vpool.id((i, j, 1, s - 1)), -vpool.id(
+                        (i - d[0], j - d[1], d, s - 1)),
+                                vpool.id((i, j, 0, s))])
 
     # Max un coup par étape
 
-    
-
     """
-    # au plus une valeur par case (contrainte pas necessaire car elle est une consequence des autres)
+    # au plus une valeur par case (contrainte pas necessaire car elle 
+    est une consequence des autres)
     # permet d'accelerer la resolution
 
     print("Au plus une valeur par case")
@@ -120,7 +158,7 @@ def solution(m1, m2):
     if resultat:
         if affichage_sol:
             print("\nVoici une solution: \n")
-            interpretation = solver.get_model() # extracting a
+            interpretation = solver.get_model()  # extracting a
             # satisfying assignment for CNF formula given to the solver
             # A model is provided if a previous SAT call returned True.
             # Otherwise, None is reported.
