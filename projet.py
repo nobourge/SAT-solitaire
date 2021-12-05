@@ -25,26 +25,19 @@ import re
 # Données générales
 D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
-# variables ##########################
-# stockage des identifiants entiers des clauses
-vpool = IDPool(start_from=1)
-# construction d'un objet formule en forme normale conjonctive
-# (Conjunctive Normal Form)
-cnf = CNF()
-
 
 def afficher_solution(interpretation,
                       steps_quantity,
                       line_quantity,
-                      column_quantity):
+                      column_quantity,
+                      vpool):
     for s in range(steps_quantity):
         for i in range(line_quantity):
             for j in range(column_quantity):
                 for d in D:
                     # if vpool.id((i, j, d, s)) in
                     # filtered_interpretation:
-                    if vpool.id(
-                            (i, j, d, s)) in interpretation:
+                    if vpool.id((i, j, d, s)) in interpretation:
                         print("step", s, ": (", i, ",", j,
                               ") to (", i + 2 * d[0], ",",
                               j + 2 *
@@ -53,6 +46,13 @@ def afficher_solution(interpretation,
 
 def solution(m1, m2):
     print("--------------------------------------------")
+    # variables ##########################
+    # stockage des identifiants entiers des clauses
+    vpool = IDPool(start_from=1)
+    # construction d'un objet formule en forme normale conjonctive
+    # (Conjunctive Normal Form)
+    cnf = CNF()
+
     # parametres
     affichage_sol = True  # affichage d'une solution
     test_unicite = False  # test si la solution est unique (si elle existe), sinon en donne une autre
@@ -95,14 +95,14 @@ def solution(m1, m2):
             vm1 = m1[i][j]
             if -1 < m1[i][j]:
                 vm2 = m2[i][j]
-                print("%1d pour la case (%1d,%1d) à l'étape %1d"
-                      % (vm1, i, j, 0))
+                # print("%1d pour la case (%1d,%1d) à l'étape %1d"
+                #    % (vm1, i, j, 0))
                 cnf.append([vpool.id((i,
                                       j,
                                       vm1,
                                       0))])
-                print("%1d pour la case (%1d,%1d) à l'étape %1d"
-                      % (vm2, i, j, steps_quantity))
+                # print("%1d pour la case (%1d,%1d) à l'étape %1d"
+                #    % (vm2, i, j, steps_quantity))
                 cnf.append([vpool.id((i,
                                       j,
                                       vm2,
@@ -215,7 +215,8 @@ def solution(m1, m2):
             afficher_solution(interpretation,
                               steps_quantity,
                               line_quantity,
-                              column_quantity)
+                              column_quantity,
+                              vpool)
 
             # test d'unicite
             if test_unicite:
@@ -241,7 +242,8 @@ def solution(m1, m2):
                     afficher_solution(interpretation,
                                       steps_quantity,
                                       line_quantity,
-                                      column_quantity)
+                                      column_quantity,
+                                      vpool)
 
         print("True")
         return True
