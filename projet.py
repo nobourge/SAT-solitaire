@@ -45,8 +45,6 @@ def solution(m1, m2):
     column_quantity = len(m1[0])
     print("column_quantity:", column_quantity)
 
-    trous = []
-
     # Données générales
     D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
@@ -68,6 +66,10 @@ def solution(m1, m2):
     print("le nombre d’ étapes pour passer de m1 à m2:",
           steps_quantity)
 
+    for m in (m1, m2):
+        print('\n'.join([''.join(['{:3}'.format(tile) for tile in line])
+                         for line in m]))
+        print("---"*line_quantity)
     # les valeurs du tableau de d́epart A1 et du tableau de fin AS
     # sont fix́ees
     for i in range(line_quantity):
@@ -104,14 +106,15 @@ def solution(m1, m2):
 
     # Clauses temporelles
 
-        # Première, apparition d'une bille
+    # Première, apparition d'une bille
     for i in range(line_quantity):
         for j in range(column_quantity):
             for s in range(1, steps_quantity + 1):
                 for d in D:
                     cnf.append([-vpool.id((i, j, 0, s - 1)),
                                 -vpool.id(
-                        (i - 2 * d[0], j - 2 * d[1], d, s - 1)),
+                                    (i - 2 * d[0], j - 2 * d[1], d,
+                                     s - 1)),
                                 vpool.id((i, j, 1, s))])
 
         # Seconde, disparition d'une bille
@@ -121,35 +124,37 @@ def solution(m1, m2):
                 for d in D:
                     cnf.append([-vpool.id((i, j, 1, s - 1)),
                                 -vpool.id(
-                        (i - d[0], j - d[1], d, s - 1)),
+                                    (i - d[0], j - d[1], d, s - 1)),
                                 vpool.id((i, j, 0, s))])
 
     # Max un coup par étape
 
-    for s in range (steps_quantity):
-        for i in range (line_quantity):
-            for j in range (column_quantity):
-                    for d in D:
-                        for ip in range (line_quantity):
-                            for jp in range (column_quantity):
-                                for dp in D:
-                                    if ip==i and jp==j and dp==d:
-                                        pass
-                                    else:
-                                        cnf.append([-vpool.id((i,j,d,s)), -vpool.id((ip,jp,dp,s))])
+    for s in range(steps_quantity):
+        for i in range(line_quantity):
+            for j in range(column_quantity):
+                for d in D:
+                    for ip in range(line_quantity):
+                        for jp in range(column_quantity):
+                            for dp in D:
+                                if ip == i and jp == j and dp == d:
+                                    pass
+                                else:
+                                    cnf.append([-vpool.id((i, j, d, s)),
+                                                -vpool.id(
+                                                    (ip, jp, dp, s))])
 
     # Au moins 1 coup par étape
 
-    for s in range (steps_quantity):
+    for s in range(steps_quantity):
         clauses = []
         for i in range(line_quantity):
-            for j in range (column_quantity):
+            for j in range(column_quantity):
                 for d in D:
-                    clauses.append(vpool.id((i,j,d,s)))
+                    clauses.append(vpool.id((i, j, d, s)))
         cnf.append(clauses)
 
     print("clauses quantity:", cnf.nv)
-    print("clauses:", cnf.clauses)
+    # print("clauses:", cnf.clauses)
 
     # phase de resolution
 
@@ -177,9 +182,18 @@ def solution(m1, m2):
             # (il y a en line_quantity fois moins)
             filtered_interpretation = list(
                 filter(lambda x: x >= 0, interpretation))
-            afficher_solution(filtered_interpretation)
+            #afficher_solution(filtered_interpretation)
 
-            # test d'unicite
+            for s in range(steps_quantity):
+                for i in range(line_quantity):
+                    for j in range(column_quantity):
+                        for d in D:
+                            if vpool.id((i, j, d, s)) in filtered_interpretation:
+                                print("step", s, ": (", i, ",", j,
+                                      ") to (", i + 2 * d[0], ",",
+                                      j + 2 *
+                                      d[1], ")")
+                # test d'unicite
             if test_unicite:
                 d = []
                 for i in range(line_quantity):
@@ -198,6 +212,18 @@ def solution(m1, m2):
                     interpretation = solver.get_model()
                     filtered_interpretation = list(
                         filter(lambda x: x >= 0, interpretation))
-                    afficher_solution(filtered_interpretation)
+                    #afficher_solution(filtered_interpretation)
+                    for s in range(steps_quantity):
+                        for i in range(line_quantity):
+                            for j in range(column_quantity):
+                                for d in D:
+                                    if vpool.id((i, j, d,
+                                                 s)) in filtered_interpretation:
+                                        print("step", s, ": (", i, ",",
+                                              j,
+                                              ") to (", i + 2 * d[0],
+                                              ",",
+                                              j + 2 *
+                                              d[1], ")")
         print("True")
         return True
