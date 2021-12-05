@@ -32,6 +32,7 @@ def afficher_solution(interpretation):
 
 
 def solution(m1, m2):
+    print("--------------------------------------------")
     # parametres
     affichage_sol = True  # affichage d'une solution
     test_unicite = False  # test si la solution est unique (si elle existe), sinon en donne une autre
@@ -67,7 +68,9 @@ def solution(m1, m2):
           steps_quantity)
 
     for m in (m1, m2):
-        print('\n'.join([''.join(['{:3}'.format(tile) for tile in line])
+        print('\n'.join([''.join(['{:3}'.format(tile if -1 < tile
+                                                else " ") for tile in
+                                  line])
                          for line in m]))
         print("---"*line_quantity)
     # les valeurs du tableau de d́epart A1 et du tableau de fin AS
