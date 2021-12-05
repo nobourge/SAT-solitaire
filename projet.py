@@ -23,7 +23,7 @@ import sys
 import re
 
 # Données générales
-D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+D = {(1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
 
 
 def afficher_solution(interpretation,
@@ -37,11 +37,10 @@ def afficher_solution(interpretation,
                 for d in D:
                     # if vpool.id((i, j, d, s)) in
                     # filtered_interpretation:
-                    if vpool.id((i, j, d, s)) in interpretation:
+                    if vpool.id((i, j, D[d], s)) in interpretation:
                         print("step", s, ": (", i, ",", j,
-                              ") to (", i + 2 * d[0], ",",
-                              j + 2 *
-                              d[1], ")")
+                              ")", D[d], " to (", i + 2 * d[0], ",",
+                              j + 2 * d[1], ")")
 
 
 def solution(m1, m2):
@@ -110,7 +109,7 @@ def solution(m1, m2):
 
     # Maximum une valeur par case
 
-    print("Maximum une valeur par case")
+    # print("Maximum une valeur par case")
     for i in range(line_quantity):
         for j in range(column_quantity):
             if -1 < m1[i][j]:
@@ -132,7 +131,7 @@ def solution(m1, m2):
                         cnf.append([-vpool.id((i, j, 0, s - 1)),
                                     -vpool.id((i - 2 * d[0],
                                                j - 2 * d[1],
-                                               d,
+                                               D[d],
                                                s - 1)),
                                     vpool.id((i, j, 1, s))])
 
@@ -145,7 +144,7 @@ def solution(m1, m2):
                         cnf.append([-vpool.id((i, j, 1, s - 1)),
                                     -vpool.id((i - d[0],
                                                j - d[1],
-                                               d,
+                                               D[d],
                                                s - 1)),
                                     vpool.id((i, j, 0, s))])
 
@@ -192,7 +191,7 @@ def solution(m1, m2):
     # solver = Glucose4(use_timer=True)
     solver.append_formula(cnf.clauses, no_return=False)
 
-    print("Resolution...")
+    # print("Resolution...")
     resultat = solver.solve()
     print("Satisfaisable : " + str(resultat))
     print("Temps de resolution : " + '{0:.2f}s'.format(solver.time()))
