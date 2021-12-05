@@ -22,13 +22,33 @@ from pysat.formula import IDPool
 import sys
 import re
 
+# Données générales
+D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
-def afficher_solution(interpretation):
-    for i in interpretation:
-        print(i)
+# variables ##########################
+# stockage des identifiants entiers des clauses
+vpool = IDPool(start_from=1)
+# construction d'un objet formule en forme normale conjonctive
+# (Conjunctive Normal Form)
+cnf = CNF()
 
 
-#  todo
+def afficher_solution(interpretation,
+                      steps_quantity,
+                      line_quantity,
+                      column_quantity):
+    for s in range(steps_quantity):
+        for i in range(line_quantity):
+            for j in range(column_quantity):
+                for d in D:
+                    # if vpool.id((i, j, d, s)) in
+                    # filtered_interpretation:
+                    if vpool.id(
+                            (i, j, d, s)) in interpretation:
+                        print("step", s, ": (", i, ",", j,
+                              ") to (", i + 2 * d[0], ",",
+                              j + 2 *
+                              d[1], ")")
 
 
 def solution(m1, m2):
@@ -37,17 +57,10 @@ def solution(m1, m2):
     affichage_sol = True  # affichage d'une solution
     test_unicite = False  # test si la solution est unique (si elle existe), sinon en donne une autre
 
-    # variables ##########################
-    vpool = IDPool(
-        start_from=1)  # pour le stockage des identifiants entiers des couples (i,j)
-    cnf = CNF()  # construction d'un objet formule en forme normale conjonctive (Conjunctive Normal Form)
     line_quantity = len(m1)
     print("line_quantity:", line_quantity)
     column_quantity = len(m1[0])
     print("column_quantity:", column_quantity)
-
-    # Données générales
-    D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
     # construction de la formule
 
@@ -72,79 +85,92 @@ def solution(m1, m2):
                                                 else " ") for tile in
                                   line])
                          for line in m]))
-        print("---"*line_quantity)
+        print("---" * line_quantity)
+
     # les valeurs du tableau de d́epart A1 et du tableau de fin AS
     # sont fix́ees
     for i in range(line_quantity):
         for j in range(column_quantity):
+
             vm1 = m1[i][j]
-            vm2 = m2[i][j]
-            print("ajout de %1d pour (%1d,%1d,%1d)" % (vm1,
-                                                       i,
-                                                       j,
-                                                       0))
-            cnf.append([vpool.id((i,
-                                  j,
-                                  vm1,
-                                  0))])
-            print("ajout de %1d pour (%1d,%1d,%1d)" % (vm2,
-                                                       i,
-                                                       j,
-                                                       steps_quantity))
-            cnf.append([vpool.id((i,
-                                  j,
-                                  vm2,
-                                  steps_quantity))])
+            if -1 < m1[i][j]:
+                vm2 = m2[i][j]
+                print("%1d pour la case (%1d,%1d) à l'étape %1d"
+                      % (vm1, i, j, 0))
+                cnf.append([vpool.id((i,
+                                      j,
+                                      vm1,
+                                      0))])
+                print("%1d pour la case (%1d,%1d) à l'étape %1d"
+                      % (vm2, i, j, steps_quantity))
+                cnf.append([vpool.id((i,
+                                      j,
+                                      vm2,
+                                      steps_quantity))])
 
     # Maximum une valeur par case
 
     print("Maximum une valeur par case")
     for i in range(line_quantity):
         for j in range(column_quantity):
-            for s in range(1, steps_quantity):
-                for v1 in range(-1, 2):
-                    for v2 in range(v1 + 1, 2):
-                        cnf.append([-vpool.id((i, j, v1)),
-                                    -vpool.id((i, j, v2))])
+            if -1 < m1[i][j]:
+                # for s in range(1, steps_quantity):
+                for s in range(0, steps_quantity + 1):
+                    for v1 in range(-1, 2):
+                        for v2 in range(v1 + 1, 2):
+                            cnf.append([-vpool.id((i, j, v1)),
+                                        -vpool.id((i, j, v2))])
 
     # Clauses temporelles
 
     # Première, apparition d'une bille
     for i in range(line_quantity):
         for j in range(column_quantity):
-            for s in range(1, steps_quantity + 1):
-                for d in D:
-                    cnf.append([-vpool.id((i, j, 0, s - 1)),
-                                -vpool.id(
-                                    (i - 2 * d[0], j - 2 * d[1], d,
-                                     s - 1)),
-                                vpool.id((i, j, 1, s))])
+            if -1 < m1[i][j]:  # noe
+                for s in range(1, steps_quantity + 1):
+                    for d in D:
+                        cnf.append([-vpool.id((i, j, 0, s - 1)),
+                                    -vpool.id((i - 2 * d[0],
+                                               j - 2 * d[1],
+                                               d,
+                                               s - 1)),
+                                    vpool.id((i, j, 1, s))])
 
         # Seconde, disparition d'une bille
     for i in range(line_quantity):
         for j in range(column_quantity):
-            for s in range(1, steps_quantity + 1):
-                for d in D:
-                    cnf.append([-vpool.id((i, j, 1, s - 1)),
-                                -vpool.id(
-                                    (i - d[0], j - d[1], d, s - 1)),
-                                vpool.id((i, j, 0, s))])
+            if -1 < m1[i][j]:  # noe
+                for s in range(1, steps_quantity + 1):
+                    for d in D:
+                        cnf.append([-vpool.id((i, j, 1, s - 1)),
+                                    -vpool.id((i - d[0],
+                                               j - d[1],
+                                               d,
+                                               s - 1)),
+                                    vpool.id((i, j, 0, s))])
 
     # Max un coup par étape
 
     for s in range(steps_quantity):
         for i in range(line_quantity):
             for j in range(column_quantity):
-                for d in D:
-                    for ip in range(line_quantity):
-                        for jp in range(column_quantity):
-                            for dp in D:
-                                if ip == i and jp == j and dp == d:
-                                    pass
-                                else:
-                                    cnf.append([-vpool.id((i, j, d, s)),
-                                                -vpool.id(
-                                                    (ip, jp, dp, s))])
+                if -1 < m1[i][j]:  # noe
+
+                    for d in D:
+                        for ip in range(line_quantity):
+                            for jp in range(column_quantity):
+                                if -1 < m1[ip][jp]:  # noe
+
+                                    for dp in D:
+                                        # todo: ?
+                                        if ip == i and jp == j and dp == d:
+                                            pass
+                                        else:
+                                            cnf.append([-vpool.id(
+                                                (i, j, d, s)),
+                                                        -vpool.id(
+                                                            (ip, jp, dp,
+                                                             s))])
 
     # Au moins 1 coup par étape
 
@@ -185,18 +211,13 @@ def solution(m1, m2):
             # (il y a en line_quantity fois moins)
             filtered_interpretation = list(
                 filter(lambda x: x >= 0, interpretation))
-            #afficher_solution(filtered_interpretation)
+            # afficher_solution(filtered_interpretation,
+            afficher_solution(interpretation,
+                              steps_quantity,
+                              line_quantity,
+                              column_quantity)
 
-            for s in range(steps_quantity):
-                for i in range(line_quantity):
-                    for j in range(column_quantity):
-                        for d in D:
-                            if vpool.id((i, j, d, s)) in filtered_interpretation:
-                                print("step", s, ": (", i, ",", j,
-                                      ") to (", i + 2 * d[0], ",",
-                                      j + 2 *
-                                      d[1], ")")
-                # test d'unicite
+            # test d'unicite
             if test_unicite:
                 d = []
                 for i in range(line_quantity):
@@ -206,7 +227,8 @@ def solution(m1, m2):
                                          v + 1)) in filtered_interpretation:
                                 d.append(-vpool.id((i, j, v + 1)))
                 solver.add_clause(d)
-                not_unique = solver.solve()  # solution pas unique si la formule est satisfaisable
+                not_unique = solver.solve()
+                # solution pas unique si la formule est satisfaisable
                 if not not_unique:
                     print("Solution unique")
                 else:
@@ -215,18 +237,11 @@ def solution(m1, m2):
                     interpretation = solver.get_model()
                     filtered_interpretation = list(
                         filter(lambda x: x >= 0, interpretation))
-                    #afficher_solution(filtered_interpretation)
-                    for s in range(steps_quantity):
-                        for i in range(line_quantity):
-                            for j in range(column_quantity):
-                                for d in D:
-                                    if vpool.id((i, j, d,
-                                                 s)) in filtered_interpretation:
-                                        print("step", s, ": (", i, ",",
-                                              j,
-                                              ") to (", i + 2 * d[0],
-                                              ",",
-                                              j + 2 *
-                                              d[1], ")")
+                    # afficher_solution(filtered_interpretation,
+                    afficher_solution(interpretation,
+                                      steps_quantity,
+                                      line_quantity,
+                                      column_quantity)
+
         print("True")
         return True
