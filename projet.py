@@ -161,15 +161,18 @@ def solution(m1, m2):
                                 if -1 < m1[ip][jp]:  # noe
 
                                     for dp in D:
-                                        # todo: ?
-                                        if ip == i and jp == j and dp == d:
+                                        if ip == i and jp == j \
+                                                and dp == d:
                                             pass
                                         else:
-                                            cnf.append([-vpool.id(
-                                                (i, j, d, s)),
-                                                        -vpool.id(
-                                                            (ip, jp, dp,
-                                                             s))])
+                                            # always true
+                                            pass
+                                            # always false
+                                            """
+                                            cnf.append([
+                                                -vpool.id((i,j,D[d],s)),
+                                                -vpool.id((ip,jp,D[dp],s))])
+                                                """
 
     # Au moins 1 coup par étape
 
@@ -210,8 +213,8 @@ def solution(m1, m2):
             # (il y a en line_quantity fois moins)
             filtered_interpretation = list(
                 filter(lambda x: x >= 0, interpretation))
-            # afficher_solution(filtered_interpretation,
-            afficher_solution(interpretation,
+            afficher_solution(filtered_interpretation,
+                              # interpretation,
                               steps_quantity,
                               line_quantity,
                               column_quantity,
@@ -219,14 +222,17 @@ def solution(m1, m2):
 
             # test d'unicite
             if test_unicite:
-                d = []
-                for i in range(line_quantity):
-                    for j in range(line_quantity):
-                        for v in range(line_quantity):
-                            if vpool.id((i, j,
-                                         v + 1)) in filtered_interpretation:
-                                d.append(-vpool.id((i, j, v + 1)))
-                solver.add_clause(d)
+                other = []
+                for s in range(steps_quantity):
+                    for i in range(line_quantity):
+                        for j in range(line_quantity):
+                            for d in D:
+                                if vpool.id((i, j,
+                                             D[d] + 1)) in \
+                                        filtered_interpretation:
+                                    other.append(-vpool.id((i, j, d + 1,
+                                                            s)))
+                solver.add_clause(other)
                 not_unique = solver.solve()
                 # solution pas unique si la formule est satisfaisable
                 if not not_unique:
