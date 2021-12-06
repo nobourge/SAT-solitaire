@@ -16,14 +16,14 @@ du Solitaire qui correspond à M à celle qui correspond à M',
 False sinon
 """
 from pysat.solvers import Minisat22
-from pysat.solvers import Glucose4
+# from pysat.solvers import Glucose4
 from pysat.formula import CNF
 from pysat.formula import IDPool
-import sys
-import re
+# import sys
+# import re
 
 # Données générales
-D = {(1, 0): 1, (0, 1): 2, (-1, 0): 3, (0, -1): 4}
+D = {(1, 0): 2, (0, 1): 3, (-1, 0): 4, (0, -1): 5}
 
 
 def afficher_solution(interpretation,
@@ -54,7 +54,10 @@ def solution(m1, m2):
 
     # parametres
     affichage_sol = True  # affichage d'une solution
-    test_unicite = False  # test si la solution est unique (si elle existe), sinon en donne une autre
+    # test si la solution est unique (si elle existe),
+    # sinon en donne une autre:
+    # test_unicite = False
+    test_unicite = True
 
     line_quantity = len(m1)
     print("line_quantity:", line_quantity)
@@ -115,73 +118,101 @@ def solution(m1, m2):
             if -1 < m1[i][j]:
                 # for s in range(1, steps_quantity):
                 for s in range(0, steps_quantity + 1):
-                    for v1 in range(-1, 2):
-                        for v2 in range(v1 + 1, 2):
-                            cnf.append([-vpool.id((i, j, v1)),
-                                        -vpool.id((i, j, v2))])
+                    for v1 in range(0, 2):
+                        cnf.append([-vpool.id((i, j, 0, s)),
+                                    -vpool.id((i, j, 1, s))])
 
     # Clauses temporelles
 
-    # Première, apparition d'une bille
     for i in range(line_quantity):
         for j in range(column_quantity):
-            if -1 < m1[i][j]:  # noe
+            if -1 < m1[i][j]:
                 for s in range(1, steps_quantity + 1):
                     for d in D:
-                        cnf.append([-vpool.id((i, j, 0, s - 1)),
-                                    -vpool.id((i - 2 * d[0],
-                                               j - 2 * d[1],
-                                               D[d],
-                                               s - 1)),
-                                    vpool.id((i, j, 1, s))])
+                        # Première, apparition d'une bille
+                        if (i - 2 * d[0]) < line_quantity and \
+                                (j - 2 * d[1]) < column_quantity:
+                            if -1 < m1[i - 2 * d[0]][j - 2 * d[1]]:
+                                cnf.append([-vpool.id((i, j, 0, s - 1)),
+                                            -vpool.id((i - 2 * d[0],
+                                                       j - 2 * d[1],
+                                                       D[d],
+                                                       s - 1)),
+                                            vpool.id((i, j, 1, s))])
+                                """
+                                cnf.append([vpool.id((i, j, 0, s - 1)),
+                                            -vpool.id((i, j, 1, s))])
+                                cnf.append([-vpool.id((i - 2 * d[0],
+                                                       j - 2 * d[1],
+                                                       D[d],
+                                                       s - 1)),
+                                            vpool.id((i, j, 1, s))])
+                                cnf.append([vpool.id((i - 2 * d[0],
+                                                      j - 2 * d[1],
+                                                      D[d],
+                                                      s - 1)),
+                                            -vpool.id(
+                                                (i, j, 1, s - 1))])
+                                """
 
-        # Seconde, disparition d'une bille
-    for i in range(line_quantity):
-        for j in range(column_quantity):
-            if -1 < m1[i][j]:  # noe
-                for s in range(1, steps_quantity + 1):
-                    for d in D:
-                        cnf.append([-vpool.id((i, j, 1, s - 1)),
-                                    -vpool.id((i - d[0],
-                                               j - d[1],
-                                               D[d],
-                                               s - 1)),
-                                    vpool.id((i, j, 0, s))])
+                        # Seconde, disparition d'une bille
+                        if i - d[0] < line_quantity and \
+                                j - d[1] < column_quantity:
+                            if -1 < m1[i - d[0]][j - d[1]]:
+                                cnf.append([-vpool.id((i, j, 0, s - 1)),
+                                            -vpool.id((i - d[0],
+                                                       j - d[1],
+                                                       D[d],
+                                                       s - 1)),
+                                            vpool.id((i, j, 1, s))])
+                                """
+                                cnf.append([vpool.id((i, j, 1, s - 1)),
+                                            -vpool.id((i, j, 0, s))])
+                                cnf.append([-vpool.id((i - d[0],
+                                                       j - d[1],
+                                                       D[d],
+                                                       s - 1)),
+                                            vpool.id((i, j, 0, s))])
+                                cnf.append([vpool.id((i - d[0],
+                                                      j - d[1],
+                                                      D[d],
+                                                      s - 1)),
+                                            -vpool.id(
+                                                (i, j, 1, s - 1))])
+                                """
 
     # Max un coup par étape
 
-    for s in range(steps_quantity):
+    for s in range(1, steps_quantity + 1):
+
         for i in range(line_quantity):
             for j in range(column_quantity):
-                if -1 < m1[i][j]:  # noe
-
+                if -1 < m1[i][j]:
                     for d in D:
+
                         for ip in range(line_quantity):
                             for jp in range(column_quantity):
-                                if -1 < m1[ip][jp]:  # noe
-
+                                if -1 < m1[ip][jp]:
                                     for dp in D:
+
                                         if ip == i and jp == j \
                                                 and dp == d:
                                             pass
                                         else:
-                                            # always true
-                                            pass
-                                            # always false
-                                            """
                                             cnf.append([
-                                                -vpool.id((i,j,D[d],s)),
-                                                -vpool.id((ip,jp,D[dp],s))])
-                                                """
-
+                                                -vpool.id(
+                                                    (i, j, D[d], s)),
+                                                -vpool.id((
+                                                          ip, jp, D[dp],
+                                                          s))])
     # Au moins 1 coup par étape
 
-    for s in range(steps_quantity):
+    for s in range(1, steps_quantity + 1):
         clauses = []
         for i in range(line_quantity):
             for j in range(column_quantity):
                 for d in D:
-                    clauses.append(vpool.id((i, j, d, s)))
+                    clauses.append(vpool.id((i, j, D[d], s)))
         cnf.append(clauses)
 
     print("clauses quantity:", cnf.nv)
@@ -230,7 +261,7 @@ def solution(m1, m2):
                                 if vpool.id((i, j,
                                              D[d] + 1)) in \
                                         filtered_interpretation:
-                                    other.append(-vpool.id((i, j, d + 1,
+                                    other.append(-vpool.id((i, j, d,
                                                             s)))
                 solver.add_clause(other)
                 not_unique = solver.solve()
