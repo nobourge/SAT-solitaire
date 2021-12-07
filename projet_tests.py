@@ -110,8 +110,6 @@ def solution(m1, m2):
             """for s in range (1, steps_quantity+1):
                 cnf.append([vpool.id((i,j,1,s,0)),vpool.id((i,j,0,s))])"""
 
-    # Clauses temporelles
-
     # Première, apparition d'une bille
     for s in range(1, steps_quantity+1): # étapes 1 à S comprises (s-1, donc commencer à 1)
         print("Etape: ", s-1)
@@ -129,15 +127,19 @@ def solution(m1, m2):
                             n_et = n_etat(i,j,d,deepcopy(etat))
                             if n_et:
                                 print("Coup: ({},{}) vers ({},{})".format(i,j,i+2*d[0],j+2*d[1]))  
-                                n_e_id = list(etats.keys())[-1]+1
-                                etats_id[s].append(n_e_id)
-                                etats[n_e_id] = n_et
+                                if s == steps_quantity: # Rajouter 'and n_et == m2' si ça ne marche pas pour les cas satisfiable
+                                    n_e_id = -1
+                                else:
+                                    n_e_id = list(etats.keys())[-1]+1
+                                    etats_id[s].append(n_e_id)
+                                    etats[n_e_id] = n_et
                                 print("Id nouvel état: {}\nNouvel état:".format(n_e_id))
                                 for p in etats[n_e_id]:
                                     print(p)
                                 print()
                                 cnf.append([-vpool.id((i,j,d,s-1)),-vpool.id((ind,s-1)),vpool.id((n_e_id,s))])
-
+                            else:
+                                cnf.append([-vpool.id((i,j,d,s-1))])
 
 
     print("Maximum un état par étape")
@@ -147,21 +149,6 @@ def solution(m1, m2):
                 if ind != ind2:
                     cnf.append([-vpool.id((ind, s)), -vpool.id((ind2, s))])
 
-    # Max un coup par étape
-"""
-    for s in range(steps_quantity):
-        for i in range(line_quantity):
-            for j in range(column_quantity):
-                for d in D:
-                    for ip in range(line_quantity):
-                        for jp in range(column_quantity):
-                            for dp in D:
-                                if ip == i and jp == j and dp == d:
-                                    pass
-                                else:
-                                    pass
-                                    cnf.append([-vpool.id((i, j, d, s)),-vpool.id((ip, jp, dp, s))])
-"""
     # Au moins 1 coup par étape
 
     for s in range(steps_quantity):
@@ -169,7 +156,8 @@ def solution(m1, m2):
         for i in range(line_quantity):
             for j in range(column_quantity):
                 for d in D:
-                    clauses.append(vpool.id((i, j, d, s)))
+                    if 0<=i+2*d[0]<line_quantity and 0<=j+2*d[1]<column_quantity: 
+                        clauses.append(vpool.id((i, j, d, s)))
         cnf.append(clauses)
     
 
@@ -223,6 +211,7 @@ def solution(m1, m2):
                                       ") to (", i + 2 * d[0], ",",
                                       j + 2 *
                                       d[1], ")")
+                                        
                 # test d'unicite
             if test_unicite:
                 d = []
