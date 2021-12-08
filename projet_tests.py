@@ -31,10 +31,6 @@ def afficher_solution(interpretation):
 #  todo
 def n_etat(i,j,d,etat):
     if d[0] != 0:
-        """print("d",d)
-                                print("etat[i+2*d[0]]:",etat[i+2*d[0]][j])
-                                print("etat[i+d[0]]", etat[i+d[0]][j])
-                                print("etat[i]",etat[i][j])"""
         if etat[i+2*d[0]][j] == 0 and etat[i+d[0]][j] == 1 and etat[i][j] == 1:
             etat[i+2*d[0]][j] = 1
             etat[i+d[0]][j] = 0
@@ -96,53 +92,44 @@ def solution(m1, m2):
         etats_id.append([])
     etats_id[-1].append(-1)
 
-    for i in range(line_quantity):
-        for j in range(column_quantity):
-            vm1 = m1[i][j]
-            vm2 = m2[i][j]
-            #print("ajout de %1d pour (%1d,%1d,%1d)" % (vm1,i,j,0))
-            #cnf.append([vpool.id((i,j,vm1,0))])
-            cnf.append([vpool.id((0,0))])
-            #print("ajout de %1d pour (%1d,%1d,%1d)" % (vm2,i,j,steps_quantity))
-            #cnf.append([vpool.id((i,j,vm2,steps_quantity))])
-            cnf.append([vpool.id((-1,steps_quantity))])
-
-            """for s in range (1, steps_quantity+1):
-                cnf.append([vpool.id((i,j,1,s,0)),vpool.id((i,j,0,s))])"""
-
+    cnf.append([vpool.id((0,0))])
+    cnf.append([vpool.id((-1,steps_quantity))])
     # Première, apparition d'une bille
+    et_vals = list(etats.values())
     for s in range(1, steps_quantity+1): # étapes 1 à S comprises (s-1, donc commencer à 1)
-        print("Etape: ", s-1)
+        #print("Etape: ", s-1)
         for ind in etats_id[s-1]:                       
             etat = etats[ind]
-            print("Id etat: {}\nEtat:".format(ind))
+            #print("Id etat: {}\nEtat:".format(ind))
             for p in etat:
-                print(p)
-            print("Etat ids à s = {} :".format(s))
-            print(etats_id[s-1])
+                pass
+                #print(p)
             for i in range(line_quantity):
                 for j in range(column_quantity):
                     for d in D:
                         if 0<=i+2*d[0]<line_quantity and 0<=j+2*d[1]<column_quantity: 
                             n_et = n_etat(i,j,d,deepcopy(etat))
-                            if n_et:
-                                print("Coup: ({},{}) vers ({},{})".format(i,j,i+2*d[0],j+2*d[1]))  
-                                if s == steps_quantity: # Rajouter 'and n_et == m2' si ça ne marche pas pour les cas satisfiable
+                            if n_et :
+                                #print("Coup: ({},{}) vers ({},{})".format(i,j,i+2*d[0],j+2*d[1]))  
+                                if s == steps_quantity and n_et == m2:
                                     n_e_id = -1
+                                elif n_et in et_vals: # unique states
+                                    n_e_id = et_vals.index(n_et) - 1 # Skewed because of state id -1 
                                 else:
                                     n_e_id = list(etats.keys())[-1]+1
                                     etats_id[s].append(n_e_id)
                                     etats[n_e_id] = n_et
-                                print("Id nouvel état: {}\nNouvel état:".format(n_e_id))
+                                    et_vals = list(etats.values())
+                                #print("Id nouvel état: {}\nNouvel état:".format(n_e_id))
                                 for p in etats[n_e_id]:
-                                    print(p)
-                                print()
+                                    pass
+                                    #print(p)
+                                #print()
                                 cnf.append([-vpool.id((i,j,d,s-1)),-vpool.id((ind,s-1)),vpool.id((n_e_id,s))])
                             else:
-                                cnf.append([-vpool.id((i,j,d,s-1))])
+                                cnf.append([-vpool.id((i,j,d,s-1)),-vpool.id((ind,s-1))])
 
-
-    print("Maximum un état par étape")
+    # Maximum un état par étape
     for s in range(1, steps_quantity+1):
         for ind in etats_id[s]:
             for ind2 in etats_id[s]:
@@ -153,6 +140,7 @@ def solution(m1, m2):
 
     for s in range(steps_quantity):
         clauses = []
+        #for ind in etats_id[s]:
         for i in range(line_quantity):
             for j in range(column_quantity):
                 for d in D:
@@ -178,7 +166,7 @@ def solution(m1, m2):
 
     if resultat:
         if affichage_sol:
-            print("\nVoici une solution: \n")
+            #print("\nVoici une solution: \n")
             interpretation = solver.get_model()  # extracting a
             # satisfying assignment for CNF formula given to the solver
             # A model is provided if a previous SAT call returned True.
@@ -188,29 +176,28 @@ def solution(m1, m2):
             # cette interpretation est longue,
             # on va filtrer les valeurs positives
             # (il y a en line_quantity fois moins)
-            filtered_interpretation = list(
-                filter(lambda x: x >= 0, interpretation))
+            filtered_interpretation = list(filter(lambda x: x >= 0, interpretation))
             #afficher_solution(filtered_interpretation)
             print("filtered_interpretation:\n{}".format(filtered_interpretation))
             for ind in filtered_interpretation:
+                #pass
                 print(vpool.obj(ind))
             print()
             for s in range(steps_quantity+1):
                 print("Step: ",s)
                 for ind in etats_id[s]:
                     if vpool.id((ind, s)) in filtered_interpretation:
-                        print("State:")
+                        print("State {}:".format(ind))
                         et = etats[ind]
                         for l in et:
+                            #pass
                             print(l)
                 for i in range(line_quantity):
                     for j in range(column_quantity):
                         for d in D:
                             if vpool.id((i, j, d, s)) in filtered_interpretation:
-                                print("Coup: (", i, ",", j,
-                                      ") to (", i + 2 * d[0], ",",
-                                      j + 2 *
-                                      d[1], ")")
+                                #pass
+                                print("Coup: (", i, ",", j,") to (", i + 2 * d[0], ",",j + 2 *d[1], ")")
                                         
                 # test d'unicite
             if test_unicite:
@@ -239,12 +226,20 @@ def solution(m1, m2):
                             for j in range(column_quantity):
                                 for d in D:
                                     if vpool.id((i, j, d,s)) in filtered_interpretation:
-                                        print("step", s, ": (", i, ",",
-                                              j,
-                                              ") to (", i + 2 * d[0],
-                                              ",",
-                                              j + 2 *
-                                              d[1], ")")
+                                        print("step", s, ": (", i, ",",j,") to (", i + 2 * d[0],",",j + 2 *d[1], ")")
         print("True")
         return True
-
+    elif cnf.nv == 152 or cnf.nv == 1837 or cnf.nv == 880:
+        interpretation = solver.get_core()
+        print("interpretation:")
+        print(interpretation)
+        for cl in cnf.clauses:
+            if vpool.id((-1,steps_quantity)) in cl or vpool.id((4,6,(0,-1),3)) in cl or -vpool.id((4,6,(0,-1),3)) in cl:
+                if len(cl) !=2 and len(cl) < 5:
+                    print("Clause:", cl)
+                    print("Objects:")
+                    for i in cl:
+                        if i < 0:
+                            print(vpool.obj(-i))    
+                        else:
+                            print(vpool.obj(i))
