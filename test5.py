@@ -5,7 +5,7 @@ from projet import solution
 
 R_matrices_list = []
 
-for size in range(7):
+for size in range(5, 7):
     print(Fore.BLUE + "size:", size, "--------------------------------")
     print(Style.RESET_ALL)
 
