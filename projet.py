@@ -198,10 +198,12 @@ def solution(m1, m2):
                                     nouv_etat_id = -1  # On fixe son identificateur à celui de l'état final
                                 elif nouv_etat in et_vals:  # Si le
                                     # nouvel état est un état qui a
-                                    # déjà été crée précédemment, on lui
-                                    # donne l'id de l'état antécédent
+                                    # déjà été crée au passé, on lui
+                                    # donne l'id de l'état passé
                                     nouv_etat_id = et_vals.index(
-                                        nouv_etat) - 1  # À cause de l'état final (id -1), la valeur est incorrecte de 1
+                                        nouv_etat) - 1  # À cause de
+                                    # l'état final (id -1), la valeur
+                                    # est déviée de 1
                                 else:
                                     nouv_etat_id = list(etats.keys())[
                                                        -1] + 1
