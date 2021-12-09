@@ -197,10 +197,11 @@ def solution(m1, m2):
     cnf.append([vpool.id((0, 0))])
     cnf.append([vpool.id((-1, steps_quantity))])
 
+    et_vals_ids = []
     for s in range(1,
                    steps_quantity + 1):  # étapes 1 à S comprises (s-1, donc commencer à 1)
         print("Etape: ", s-1)
-        print("Nb etats dic: ", len(list(etats.keys())))
+        print("Nb et_vals_ids", len(et_vals_ids))
         # et_vals_id est une liste des identificateurs des différents états trouvés lors de l'étape en cours, ça servira plus tard
         et_vals_ids = []
         #if steps_quantity == 31:
