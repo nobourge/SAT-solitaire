@@ -128,9 +128,9 @@ def solution(m1, m2):
     cnf = CNF()  # construction d'un objet formule en forme normale conjonctive (Conjunctive Normal Form)
 
     line_quantity = len(m1)
-    print("line_quantity:", line_quantity)
+    # print("line_quantity:", line_quantity)
     column_quantity = len(m1[0])
-    print("column_quantity:", column_quantity)
+    # print("column_quantity:", column_quantity)
 
 
     # construction de la formule
