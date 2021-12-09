@@ -29,8 +29,10 @@ CARDINALS = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 INTER_CARDINALS = [(1, 1), (-1, 1), (-1, -1), (1, -1)]
 
 
-def afficher_solution(interpretation, steps_quantity,
-                      line_quantity, column_quantity,
+def afficher_solution(interpretation, 
+                      steps_quantity,
+                      line_quantity,
+                      column_quantity,
                       etats_id, vpool, etats):
     print("Interpretation:\n{}".format(interpretation))
     for s in range(steps_quantity + 1):
@@ -66,11 +68,22 @@ def n_etat(#m2,
            #balls_quantity
            ):
     """
-    Fonction de transition prenant en entrée les informations d'un coup (coordonnées (i,j) et direction d) ainsi
-    qu'un état depuis lequel le coup est sensé être joué.
-    Cette fonction va alors tenter de jouer le coup reçu sur le tableau reçu.
-    Si le coup est légal, un nouveau tableau à jour est renvoyé.
-    Sinon, la fonction renvoit rien.
+    Fonction de transition qui tente de jouer le coup reçu sur le
+    tableau reçu.
+
+    :param m2: list of list: état du plateau désiré
+    :param line_quantity: int : quantité de ligne du plateau
+    :param column_quantity: quantité de colonnes du plateau
+    :param i: int: coordonnée du coup
+    :param j: int: coordonnée du coup
+    :param d: tuple: direction du coup
+    :param etat: list of list: état depuis lequel le coup est sensé être joué
+    :param balls_quantity: int: quantité de billes présentes sur le
+    plateau
+
+    :return: list of list: nouveau tableau à jour de l'état si le coup
+    est légal,
+            None sinon.
     """
     #move = False
 
@@ -121,6 +134,20 @@ def n_etat(#m2,
 
 
 def solution(m1, m2):
+    """
+    prend en entrée deux matrices M et
+    M' de même taille, dont les éléments sont dans {−1, 0, 1},
+    construit une instance du problème SAT, et appelle un solveur
+    SAT (par exemple MiniSAT22 ou Glucose3).
+
+    :param m1: list of lists: état du plateau de départ
+    :param m2: list of lists: état du plateau désiré
+
+    :return: True s’il existe une suite de coups qui permettent de
+    passer de la configuration du Solitaire qui correspond à M à
+    celle qui correspond à M',
+            False sinon.
+    """
     # parametres
     affichage_sol = True  # affichage d'une solution
     test_unicite = False  # test si la solution est unique (si elle existe), sinon en donne une autre
