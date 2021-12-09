@@ -35,7 +35,7 @@ def afficher_solution(interpretation, steps_quantity,
     print("Interpretation:\n{}".format(interpretation))
     for s in range(steps_quantity + 1):
         print("Step: ", s)
-        for ind in etats_id[s]:
+        """for ind in etats_id[s]:
             if vpool.id((ind, s)) in interpretation:
                 print("State {}:".format(ind))
                 et = etats[ind]
@@ -43,7 +43,7 @@ def afficher_solution(interpretation, steps_quantity,
                     # pass
                     print('\n'.join([''.join(
                         ['{:3}'.format(tile) for tile in l])]))
-                print("---" * line_quantity)
+                print("---" * line_quantity)"""
         for i in range(line_quantity):
             for j in range(column_quantity):
                 for d in CARDINALS:
@@ -59,11 +59,12 @@ def in_matrix_range(line_quantity, column_quantity, y, x):
         return True
 
 
-def n_etat(m2,
+def n_etat(#m2,
            line_quantity,
            column_quantity,
            i, j, d, etat,
-           balls_quantity):
+           #balls_quantity
+           ):
     """
     Fonction de transition prenant en entrée les informations d'un coup (coordonnées (i,j) et direction d) ainsi
     qu'un état depuis lequel le coup est sensé être joué.
@@ -71,7 +72,7 @@ def n_etat(m2,
     Si le coup est légal, un nouveau tableau à jour est renvoyé.
     Sinon, la fonction renvoit rien.
     """
-    move = False
+    #move = False
 
     if d[0] != 0:
         if etat[i + 2 * d[0]][j] == 0 and etat[i + d[0]][j] == 1 and \
@@ -79,15 +80,17 @@ def n_etat(m2,
             etat[i + 2 * d[0]][j] = 1
             etat[i + d[0]][j] = 0
             etat[i][j] = 0
-            move = True
+            return etat
+            #move = True
     elif d[1] != 0:
         if etat[i][j + 2 * d[1]] == 0 and etat[i][j + d[1]] == 1 and \
                 etat[i][j] == 1:
             etat[i][j + 2 * d[1]] = 1
             etat[i][j + d[1]] = 0
             etat[i][j] = 0
-            move = True
-
+            return etat
+            #move = True
+            """
     if move:
         if etat[i][j] == m2[i][j]:
             return etat
@@ -114,7 +117,7 @@ def n_etat(m2,
                         if etat[i + portee * d[0]][
                             j + portee * d[1]] \
                                 == 1:
-                            return etat
+                            return etat"""
 
 
 def solution(m1, m2):
@@ -155,9 +158,9 @@ def solution(m1, m2):
                          for line in m]))
         print("---" * line_quantity)
 
-    # Etats est un dictionnaire contenant les etats du plateau associés à un identificateur
-    etats = {-1: m2}
-    etats[0] = m1
+    # Etats est un dictionnaire contenant les etats du plateau à l'étape précédente de s associés à un identificateur
+    etats = {0: m1}
+    #etats[0] = m1
     # etats_id est une liste contenant une liste par étape
     # Dans chaque liste elle contiendra les identificateurs des etats joués à l'étape appropriée
     etats_id = [[0]]
@@ -169,11 +172,15 @@ def solution(m1, m2):
     cnf.append([vpool.id((0, 0))])
     cnf.append([vpool.id((-1, steps_quantity))])
 
-    # et_vals est une liste des différents états, ça servira plus tard
-    et_vals = list(etats.values())
     for s in range(1,
                    steps_quantity + 1):  # étapes 1 à S comprises (s-1, donc commencer à 1)
-        # print("Etape: ", s-1)
+        print("Etape: ", s-1)
+        print("Nb etats dic: ", len(list(etats.keys())))
+        # et_vals est une liste des différents états trouvés lors de l'étape en cours, ça servira plus tard
+        et_vals = []
+        et_vals_ids = []
+        #if steps_quantity == 31:
+            #print("Etape: ", s-1)
         for ind in etats_id[s - 1]:
             etat = etats[ind]  # Un état du tableau à l'étape s
             """print("Id etat: {}\nEtat:".format(ind))
@@ -184,14 +191,15 @@ def solution(m1, m2):
                     for d in CARDINALS:
                         if 0 <= i + 2 * d[0] < line_quantity \
                                 and 0 <= j + 2 * d[1] < column_quantity:  # Pas besoin de perdre du temps avec les coups sortant du plateau
-                            balls_quantity = steps_quantity - s
+                            #balls_quantity = steps_quantity - s
 
                             # Déterminer l'état résultant de l'état à s et du coup
-                            nouv_etat = n_etat(m2,
+                            nouv_etat = n_etat(#m2,
                                                line_quantity,
                                                column_quantity,
                                                i, j, d, deepcopy(etat),
-                                               balls_quantity)
+                                               #balls_quantity
+                                               )
                             if nouv_etat:
                                 # print("Coup: ({},{}) vers ({},{})".format(i,j,i+2*d[0],j+2*d[1]))
                                 if s == steps_quantity and nouv_etat == m2:  #  Si à la dernière étape l'état résultant équivaut à l'état final
@@ -200,17 +208,14 @@ def solution(m1, m2):
                                     # nouvel état est un état qui a
                                     # déjà été crée au passé, on lui
                                     # donne l'id de l'état passé
-                                    nouv_etat_id = et_vals.index(
-                                        nouv_etat) - 1  # À cause de
-                                    # l'état final (id -1), la valeur
-                                    # est déviée de 1
+                                    nouv_etat_id = et_vals_ids[et_vals.index(nouv_etat)]
                                 else:
                                     nouv_etat_id = list(etats.keys())[
                                                        -1] + 1
                                     etats_id[s].append(nouv_etat_id)
                                     etats[nouv_etat_id] = nouv_etat
-                                    et_vals = list(
-                                        etats.values())  # Mise à jour de la liste d'états
+                                    et_vals.append(nouv_etat) # Mise à jour de la liste d'états
+                                    et_vals_ids.append(nouv_etat_id)
                                 """print("Id nouvel état: {}\nNouvel état:".format(nouv_etat_id))
                                 for p in etats[nouv_etat_id]:
                                     print(p)
@@ -224,9 +229,10 @@ def solution(m1, m2):
                                 # il faut 'bannir' cette combinaison
                                 cnf.append([-vpool.id((i, j, d, s - 1)),
                                             -vpool.id((ind, s - 1))])
+            del etats[ind] # Garder le dictionnaire aussi petit que possible pour économiser la mémoire
 
     # Maximum un état par étape
-    for s in range(1, steps_quantity + 1):
+    #for s in range(1, steps_quantity + 1):
         for ind in etats_id[s]:
             for ind2 in etats_id[s]:
                 if ind != ind2:
@@ -235,7 +241,7 @@ def solution(m1, m2):
 
     # Au moins 1 coup par étape
 
-    for s in range(steps_quantity):
+    #for s in range(steps_quantity):
         clauses = []
         for i in range(line_quantity):
             for j in range(column_quantity):
@@ -243,7 +249,7 @@ def solution(m1, m2):
                     if 0 <= i + 2 * d[
                         0] < line_quantity and 0 <= j + 2 * d[
                         1] < column_quantity:
-                        clauses.append(vpool.id((i, j, d, s)))
+                        clauses.append(vpool.id((i, j, d, s-1)))
         cnf.append(clauses)
 
     print("clauses quantity:", cnf.nv)
