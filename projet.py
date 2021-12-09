@@ -16,59 +16,129 @@ du Solitaire qui correspond à M à celle qui correspond à M',
 False sinon
 """
 from pysat.solvers import Minisat22
-# from pysat.solvers import Glucose4
+from pysat.solvers import Glucose4
 from pysat.formula import CNF
 from pysat.formula import IDPool
-# import sys
-# import re
+from copy import deepcopy
+import sys
+import re
 
 # Données générales
-D = {(1, 0): 6, (0, 1): 3, (-1, 0): 12, (0, -1): 9}
+
+CARDINALS = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+INTER_CARDINALS = [(1, 1), (-1, 1), (-1, -1), (1, -1)]
 
 
-def afficher_solution(interpretation,
-                      steps_quantity,
-                      line_quantity,
-                      column_quantity,
-                      vpool):
-    for s in range(steps_quantity):
+def afficher_solution(interpretation, steps_quantity,
+                      line_quantity, column_quantity,
+                      etats_id, vpool, etats):
+    print("Interpretation:\n{}".format(interpretation))
+    for s in range(steps_quantity + 1):
+        print("Step: ", s)
+        for ind in etats_id[s]:
+            if vpool.id((ind, s)) in interpretation:
+                print("State {}:".format(ind))
+                et = etats[ind]
+                for l in et:
+                    # pass
+                    print('\n'.join([''.join(
+                        ['{:3}'.format(tile) for tile in l])]))
+                print("---" * line_quantity)
         for i in range(line_quantity):
             for j in range(column_quantity):
-                for d in D:
-                    if vpool.id((i, j, D[d], s)) in interpretation:
-                        print("step", s, ": (",
-                              i, ",", j,
-                              ")", D[d], " to (", i + 2 * d[0], ",",
-                              j + 2 * d[1], ")")
+                for d in CARDINALS:
+                    if vpool.id((i, j, d, s)) in interpretation:
+                        pass
+                        print("Coup: (", i, ",", j, ") to (",
+                              i + 2 * d[0], ",", j + 2 * d[1], ")")
+
+
+def in_matrix_range(line_quantity, column_quantity, y, x):
+    if 0 <= y < line_quantity \
+            and 0 <= x < column_quantity:
+        return True
+
+
+def n_etat(m2,
+           line_quantity,
+           column_quantity,
+           i, j, d, etat,
+           balls_quantity):
+    """
+    Fonction de transition prenant en entrée les informations d'un coup (coordonnées (i,j) et direction d) ainsi
+    qu'un état depuis lequel le coup est sensé être joué.
+    Cette fonction va alors tenter de jouer le coup reçu sur le tableau reçu.
+    Si le coup est légal, un nouveau tableau à jour est renvoyé.
+    Sinon, la fonction renvoit rien.
+    """
+    move = False
+
+    if d[0] != 0:
+        if etat[i + 2 * d[0]][j] == 0 and etat[i + d[0]][j] == 1 and \
+                etat[i][j] == 1:
+            etat[i + 2 * d[0]][j] = 1
+            etat[i + d[0]][j] = 0
+            etat[i][j] = 0
+            move = True
+    elif d[1] != 0:
+        if etat[i][j + 2 * d[1]] == 0 and etat[i][j + d[1]] == 1 and \
+                etat[i][j] == 1:
+            etat[i][j + 2 * d[1]] = 1
+            etat[i][j + d[1]] = 0
+            etat[i][j] = 0
+            move = True
+
+    if move:
+        if etat[i][j] == m2[i][j]:
+            return etat
+        else:
+            #
+            for d in CARDINALS:
+                for portee in range(balls_quantity):
+                    if in_matrix_range(line_quantity,
+                                       column_quantity,
+                                       i + portee * d[0],
+                                       j + portee * d[1]):
+
+                        if etat[i + portee * d[0]][
+                            j + portee * d[1]] \
+                                == 1:
+                            return etat
+            for d in INTER_CARDINALS:
+                for portee in range(balls_quantity - 1):
+                    if in_matrix_range(line_quantity,
+                                       column_quantity,
+                                       i + portee * d[0],
+                                       j + portee * d[1]):
+
+                        if etat[i + portee * d[0]][
+                            j + portee * d[1]] \
+                                == 1:
+                            return etat
 
 
 def solution(m1, m2):
-    print("--------------------------------------------")
-    # variables ##########################
-    # stockage des identifiants entiers des clauses
-    vpool = IDPool(start_from=1)
-    # construction d'un objet formule en forme normale conjonctive
-    # (Conjunctive Normal Form)
-    cnf = CNF()
-
     # parametres
     affichage_sol = True  # affichage d'une solution
-    # test si la solution est unique (si elle existe),
-    # sinon en donne une autre:
-    # test_unicite = False
-    test_unicite = True
+    test_unicite = False  # test si la solution est unique (si elle existe), sinon en donne une autre
+
+    # variables ##########################
+    vpool = IDPool(
+        start_from=1)  # pour le stockage des identifiants entiers des couples (i,j)
+    cnf = CNF()  # construction d'un objet formule en forme normale conjonctive (Conjunctive Normal Form)
 
     line_quantity = len(m1)
     print("line_quantity:", line_quantity)
     column_quantity = len(m1[0])
     print("column_quantity:", column_quantity)
 
+
     # construction de la formule
 
     print("Construction des clauses\n")
 
     # =============|
-    # contraintes |
+    #  contraintes |
     # =============|
 
     # Etat du plateau
@@ -78,177 +148,119 @@ def solution(m1, m2):
         steps_quantity += i.count(1)
     for i in m2:
         steps_quantity -= i.count(1)
-    print("le nombre d’ étapes pour passer de m1 à m2:",
-          steps_quantity)
+    print("Le nombre d’étapes pour passer de m1 à m2:", steps_quantity)
 
     for m in (m1, m2):
-        print('\n'.join([''.join(['{:3}'.format(tile if -1 < tile
-                                                else " ") for tile in
-                                  line])
+        print('\n'.join([''.join(['{:3}'.format(tile) for tile in line])
                          for line in m]))
         print("---" * line_quantity)
 
-    # les valeurs du tableau de d́epart A1 et du tableau de fin AS
-    # sont fix́ees
+    # Etats est un dictionnaire contenant les etats du plateau associés à un identificateur
+    etats = {-1: m2}
+    etats[0] = m1
+    # etats_id est une liste contenant une liste par étape
+    # Dans chaque liste elle contiendra les identificateurs des etats joués à l'étape appropriée
+    etats_id = [[0]]
+    for i in range(1, steps_quantity + 1):
+        etats_id.append([])
+    etats_id[-1].append(-1)
 
-    for i in range(line_quantity):
-        for j in range(column_quantity):
+    #  Une clause fixant l'état du tableau au début et à la fin
+    cnf.append([vpool.id((0, 0))])
+    cnf.append([vpool.id((-1, steps_quantity))])
 
-            vm1 = m1[i][j]
-            if -1 < m1[i][j]:
-                vm2 = m2[i][j]
-                # print("%1d pour la case (%1d,%1d) à l'étape %1d"
-                #    % (vm1, i, j, 0))
-                cnf.append([vpool.id((i,
-                                      j,
-                                      vm1,
-                                      0))])
-                # print("%1d pour la case (%1d,%1d) à l'étape %1d"
-                #    % (vm2, i, j, steps_quantity))
-                cnf.append([vpool.id((i,
-                                      j,
-                                      vm2,
-                                      steps_quantity))])
+    # et_vals est une liste des différents états, ça servira plus tard
+    et_vals = list(etats.values())
+    for s in range(1,
+                   steps_quantity + 1):  # étapes 1 à S comprises (s-1, donc commencer à 1)
+        # print("Etape: ", s-1)
+        for ind in etats_id[s - 1]:
+            etat = etats[ind]  # Un état du tableau à l'étape s
+            """print("Id etat: {}\nEtat:".format(ind))
+            for p in etat:
+                print(p)"""
+            for i in range(line_quantity):
+                for j in range(column_quantity):
+                    for d in CARDINALS:
+                        if 0 <= i + 2 * d[0] < line_quantity \
+                                and 0 <= j + 2 * d[1] < column_quantity:  # Pas besoin de perdre du temps avec les coups sortant du plateau
+                            balls_quantity = steps_quantity - s
 
-    # Maximum une valeur par case
+                            # Déterminer l'état résultant de l'état à s et du coup
+                            nouv_etat = n_etat(m2,
+                                               line_quantity,
+                                               column_quantity,
+                                               i, j, d, deepcopy(etat),
+                                               balls_quantity)
+                            if nouv_etat:
+                                # print("Coup: ({},{}) vers ({},{})".format(i,j,i+2*d[0],j+2*d[1]))
+                                if s == steps_quantity and nouv_etat == m2:  #  Si à la dernière étape l'état résultant équivaut à l'état final
+                                    nouv_etat_id = -1  # On fixe son identificateur à celui de l'état final
+                                elif nouv_etat in et_vals:  # Si le
+                                    # nouvel état est un état qui a
+                                    # déjà été crée précédemment, on lui
+                                    # donne l'id de l'état antécédent
+                                    nouv_etat_id = et_vals.index(
+                                        nouv_etat) - 1  # À cause de l'état final (id -1), la valeur est incorrecte de 1
+                                else:
+                                    nouv_etat_id = list(etats.keys())[
+                                                       -1] + 1
+                                    etats_id[s].append(nouv_etat_id)
+                                    etats[nouv_etat_id] = nouv_etat
+                                    et_vals = list(
+                                        etats.values())  # Mise à jour de la liste d'états
+                                """print("Id nouvel état: {}\nNouvel état:".format(nouv_etat_id))
+                                for p in etats[nouv_etat_id]:
+                                    print(p)
+                                print()"""
+                                cnf.append([-vpool.id((i, j, d, s - 1)),
+                                            -vpool.id((ind, s - 1)),
+                                            vpool.id(
+                                                (nouv_etat_id, s))])
+                            else:
+                                #  Si un coup joué sur une certaine configuration du tableau ne résulte pas en un nouveau tableau légal
+                                # il faut 'bannir' cette combinaison
+                                cnf.append([-vpool.id((i, j, d, s - 1)),
+                                            -vpool.id((ind, s - 1))])
 
-    # print("Maximum une valeur par case")
-    for i in range(line_quantity):
-        for j in range(column_quantity):
-            if -1 < m1[i][j]:
-                for s in range(0, steps_quantity + 1):
-                    for v1 in range(0, 2):
-                        cnf.append([-vpool.id((i, j, 0, s)),
-                                    -vpool.id((i, j, 1, s))])
-
-    # Clauses temporelles
-
-    for i in range(line_quantity):
-        for j in range(column_quantity):
-            if -1 < m1[i][j]:
-                for s in range(1, steps_quantity + 1):
-                    for d in D:
-                        if i - d[0] < line_quantity and \
-                                j - d[1] < column_quantity and \
-                                (i - 2 * d[0]) < line_quantity and \
-                                (j - 2 * d[1]) < column_quantity:
-
-                            if -1 < m1[i - d[0]][j - d[1]] and \
-                                    -1 < m1[i - 2 * d[0]][j - 2 * d[1]]:
-
-                                cnf.append([-vpool.id((i - 2 * d[0],
-                                                       j - 2 * d[1],
-                                                       1, s - 1)),
-                                            -vpool.id((i - d[0],
-                                                       j - d[1],
-                                                       1, s - 1)),
-
-                                            -vpool.id((i, j, 0, s - 1)),
-
-                                            -vpool.id((i - 2 * d[0],
-                                                       j - 2 * d[1],
-                                                       D[d],
-                                                       s - 1)),
-
-                                            -vpool.id((i - 2 * d[0],
-                                                       j - 2 * d[1],
-                                                       0, s)),
-                                            -vpool.id((i - d[0],
-                                                       j - d[1],
-                                                       0, s)),
-
-                                            vpool.id((i, j, 1, s))])
-                                """
-                                cnf.append([vpool.id((i, j, 1, s - 1)),
-                                            -vpool.id((i, j, 0, s))])
-                                cnf.append([-vpool.id((i - d[0],
-                                                       j - d[1],
-                                                       D[d],
-                                                       s - 1)),
-                                            vpool.id((i, j, 0, s))])
-                                cnf.append([vpool.id((i - d[0],
-                                                      j - d[1],
-                                                      D[d],
-                                                      s - 1)),
-                                            -vpool.id(
-                                                (i, j, 1, s - 1))])
-                                """
-                                """
-                                cnf.append([vpool.id((i, j, 0, s - 1)),
-                                            -vpool.id((i, j, 1, s))])
-                                cnf.append([-vpool.id((i - 2 * d[0],
-                                                       j - 2 * d[1],
-                                                       D[d],
-                                                       s - 1)),
-                                            vpool.id((i, j, 1, s))])
-                                cnf.append([vpool.id((i - 2 * d[0],
-                                                      j - 2 * d[1],
-                                                      D[d],
-                                                      s - 1)),
-                                            -vpool.id(
-                                                (i, j, 0, s - 1))])
-                                """
-
-    # Max un coup par étape
-
+    # Maximum un état par étape
     for s in range(1, steps_quantity + 1):
+        for ind in etats_id[s]:
+            for ind2 in etats_id[s]:
+                if ind != ind2:
+                    cnf.append(
+                        [-vpool.id((ind, s)), -vpool.id((ind2, s))])
 
-        for i in range(line_quantity):
-            for j in range(column_quantity):
-                if -1 < m1[i][j]:
-                    for d in D:
-
-                        for ip in range(line_quantity):
-                            for jp in range(column_quantity):
-                                if -1 < m1[ip][jp]:
-                                    for dp in D:
-
-                                        if ip != i or \
-                                                jp != j or \
-                                                dp != d:
-                                            cnf.append([
-                                                -vpool.id(
-                                                    (i, j, D[d], s)),
-                                                -vpool.id((
-                                                          ip, jp, D[dp],
-                                                          s))])
     # Au moins 1 coup par étape
 
-    for s in range(steps_quantity + 1):
+    for s in range(steps_quantity):
         clauses = []
         for i in range(line_quantity):
             for j in range(column_quantity):
-                for d in D:
-                    clauses.append(vpool.id((i, j, D[d], s)))
+                for d in CARDINALS:
+                    if 0 <= i + 2 * d[
+                        0] < line_quantity and 0 <= j + 2 * d[
+                        1] < column_quantity:
+                        clauses.append(vpool.id((i, j, d, s)))
         cnf.append(clauses)
 
-    # pas le meme coup 2 etapes consecutives
-    for s in range(steps_quantity):
-        for i in range(line_quantity):
-            for j in range(column_quantity):
-                for d in D:
-                    cnf.append([-vpool.id((i, j, D[d], s)),
-                               -vpool.id((i, j, D[d], s + 1))])
-
-
     print("clauses quantity:", cnf.nv)
-    # print("clauses:", cnf.clauses)
 
     # phase de resolution
 
-    solver = Minisat22(
+    solver = Glucose4(
         use_timer=True)  # pour utiliser le solveur MiniSAT
     # solver = Glucose4(use_timer=True)
     solver.append_formula(cnf.clauses, no_return=False)
 
-    # print("Resolution...")
+    print("Resolution...")
     resultat = solver.solve()
     print("Satisfaisable : " + str(resultat))
     print("Temps de resolution : " + '{0:.2f}s'.format(solver.time()))
 
     if resultat:
         if affichage_sol:
-            print("\nVoici une solution: \n")
+            # print("\nVoici une solution: \n")
             interpretation = solver.get_model()  # extracting a
             # satisfying assignment for CNF formula given to the solver
             # A model is provided if a previous SAT call returned True.
@@ -260,28 +272,21 @@ def solution(m1, m2):
             # (il y a en line_quantity fois moins)
             filtered_interpretation = list(
                 filter(lambda x: x >= 0, interpretation))
-            afficher_solution(# filtered_interpretation,
-                              interpretation,
-                              steps_quantity,
-                              line_quantity,
-                              column_quantity,
-                              vpool)
-            """
+            afficher_solution(filtered_interpretation, steps_quantity,
+                              line_quantity, column_quantity,
+                              etats_id, vpool, etats)
+
             # test d'unicite
             if test_unicite:
-                other = []
-                for s in range(steps_quantity):
-                    for i in range(line_quantity):
-                        for j in range(line_quantity):
-                            for d in D:
-                                if vpool.id((i, j,
-                                             D[d] + 1)) in \
-                                        filtered_interpretation:
-                                    other.append(-vpool.id((i, j, d,
-                                                            s)))
-                solver.add_clause(other)
-                not_unique = solver.solve()
-                # solution pas unique si la formule est satisfaisable
+                d = []
+                for i in range(line_quantity):
+                    for j in range(line_quantity):
+                        for v in range(line_quantity):
+                            if vpool.id((i, j,
+                                         v + 1)) in filtered_interpretation:
+                                d.append(-vpool.id((i, j, v + 1)))
+                solver.add_clause(d)
+                not_unique = solver.solve()  # solution pas unique si la formule est satisfaisable
                 if not not_unique:
                     print("Solution unique")
                 else:
@@ -290,12 +295,9 @@ def solution(m1, m2):
                     interpretation = solver.get_model()
                     filtered_interpretation = list(
                         filter(lambda x: x >= 0, interpretation))
-                    # afficher_solution(filtered_interpretation,
-                    afficher_solution(interpretation,
-                                      steps_quantity,
-                                      line_quantity,
-                                      column_quantity,
-                                      vpool)
-"""
+                    afficher_solution(filtered_interpretation,
+                                      steps_quantity, line_quantity,
+                                      column_quantity, etats_id,
+                                      vpool, etats)
         print("True")
         return True
