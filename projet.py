@@ -22,6 +22,7 @@ from pysat.formula import IDPool
 from copy import deepcopy
 import sys
 import re
+import numpy
 
 # Données générales
 
@@ -66,6 +67,7 @@ def in_matrix_range(line_quantity, column_quantity, y, x):
 def n_etat(m2,
            line_quantity,
            column_quantity,
+           potential_isolation,
            i, j, d, etat,
            balls_quantity
            ):
@@ -107,32 +109,35 @@ def n_etat(m2,
             move = True
 
     if move:
-        if etat[i][j] == m2[i][j]:
+        if not potential_isolation:
             return etat
         else:
-            #
-            for d in CARDINALS:
-                for portee in range(balls_quantity):
-                    if in_matrix_range(line_quantity,
-                                       column_quantity,
-                                       i + portee * d[0],
-                                       j + portee * d[1]):
+            if etat[i][j] == m2[i][j]:
+                return etat
+            else:
+                #
+                for d in CARDINALS:
+                    for portee in range(balls_quantity):
+                        if in_matrix_range(line_quantity,
+                                           column_quantity,
+                                           i + portee * d[0],
+                                           j + portee * d[1]):
 
-                        if etat[i + portee * d[0]][
-                            j + portee * d[1]] \
-                                == 1:
-                            return etat
-            for d in INTER_CARDINALS:
-                for portee in range(balls_quantity - 1):
-                    if in_matrix_range(line_quantity,
-                                       column_quantity,
-                                       i + portee * d[0],
-                                       j + portee * d[1]):
+                            if etat[i + portee * d[0]][
+                                j + portee * d[1]] \
+                                    == 1:
+                                return etat
+                for d in INTER_CARDINALS:
+                    for portee in range(balls_quantity - 1):
+                        if in_matrix_range(line_quantity,
+                                           column_quantity,
+                                           i + portee * d[0],
+                                           j + portee * d[1]):
 
-                        if etat[i + portee * d[0]][
-                            j + portee * d[1]] \
-                                == 1:
-                            return etat
+                            if etat[i + portee * d[0]][
+                                j + portee * d[1]] \
+                                    == 1:
+                                return etat
 
 
 def solution(m1, m2):
@@ -174,7 +179,9 @@ def solution(m1, m2):
     # =============|
 
     # Etat du plateau
+    m1arr = numpy.array(m1)
 
+    tiles_quantity = numpy.count_nonzero(-1 < m1arr)
     steps_quantity = 0
     for i in m1:
         steps_quantity += i.count(1)
@@ -201,6 +208,7 @@ def solution(m1, m2):
     cnf.append([vpool.id((0, 0))])
     cnf.append([vpool.id((-1, steps_quantity))])
 
+    potential_isolation = False
     for s in range(1,
                    steps_quantity + 1):  # étapes 1 à S comprises (s-1, donc commencer à 1)
         print("Etape: ", s-1)
@@ -221,11 +229,14 @@ def solution(m1, m2):
                         if 0 <= i + 2 * d[0] < line_quantity \
                                 and 0 <= j + 2 * d[1] < column_quantity:  # Pas besoin de perdre du temps avec les coups sortant du plateau
                             balls_quantity = steps_quantity - s
+                            if balls_quantity < tiles_quantity/2:
+                                potential_isolation = True
 
                             # Déterminer l'état résultant de l'état à s et du coup
                             nouv_etat = n_etat(m2,
                                                line_quantity,
                                                column_quantity,
+                                               potential_isolation,
                                                i, j, d, deepcopy(etat),
                                                balls_quantity
                                                )
