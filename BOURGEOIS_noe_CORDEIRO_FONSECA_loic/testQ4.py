@@ -74,9 +74,9 @@ def check():
 				if m0[k][n] == 0:
 					m0[k][n] = 1
 					if solution(m[0],m0)==True:
-						print("Votre programme trouve une solution sur le couple:")
+						print("Satisfaisable : True")
 					else:
-						print("Votre programme ne trouve pas de solution sur le couple:")
+						print("Satisfaisable : False")
 					print((m[0],m[1]))
 					m0[k][n] = 0
 					print(" \n \n")
