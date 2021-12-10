@@ -29,11 +29,13 @@ CARDINALS = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 INTER_CARDINALS = [(1, 1), (-1, 1), (-1, -1), (1, -1)]
 
 
-def afficher_solution(interpretation, 
+def afficher_solution(interpretation,
                       steps_quantity,
                       line_quantity,
                       column_quantity,
-                      etats_id, vpool, etats):
+                      etats_id,
+                      vpool,
+                      etats):
     print("Interpretation:\n{}".format(interpretation))
     for s in range(steps_quantity + 1):
         print("Step: ", s)
@@ -61,11 +63,11 @@ def in_matrix_range(line_quantity, column_quantity, y, x):
         return True
 
 
-def n_etat(#m2,
+def n_etat(m2,
            line_quantity,
            column_quantity,
            i, j, d, etat,
-           #balls_quantity
+           balls_quantity
            ):
     """
     Fonction de transition qui tente de jouer le coup reçu sur le
@@ -85,7 +87,7 @@ def n_etat(#m2,
     est légal,
             None sinon.
     """
-    #move = False
+    move = False
 
     if d[0] != 0:
         if etat[i + 2 * d[0]][j] == 0 and etat[i + d[0]][j] == 1 and \
@@ -93,17 +95,17 @@ def n_etat(#m2,
             etat[i + 2 * d[0]][j] = 1
             etat[i + d[0]][j] = 0
             etat[i][j] = 0
-            return etat
-            #move = True
+            #return etat
+            move = True
     elif d[1] != 0:
         if etat[i][j + 2 * d[1]] == 0 and etat[i][j + d[1]] == 1 and \
                 etat[i][j] == 1:
             etat[i][j + 2 * d[1]] = 1
             etat[i][j + d[1]] = 0
             etat[i][j] = 0
-            return etat
-            #move = True
-            """
+            #return etat
+            move = True
+
     if move:
         if etat[i][j] == m2[i][j]:
             return etat
@@ -130,7 +132,7 @@ def n_etat(#m2,
                         if etat[i + portee * d[0]][
                             j + portee * d[1]] \
                                 == 1:
-                            return etat"""
+                            return etat
 
 
 def solution(m1, m2):
@@ -218,14 +220,14 @@ def solution(m1, m2):
                     for d in CARDINALS:
                         if 0 <= i + 2 * d[0] < line_quantity \
                                 and 0 <= j + 2 * d[1] < column_quantity:  # Pas besoin de perdre du temps avec les coups sortant du plateau
-                            #balls_quantity = steps_quantity - s
+                            balls_quantity = steps_quantity - s
 
                             # Déterminer l'état résultant de l'état à s et du coup
-                            nouv_etat = n_etat(#m2,
+                            nouv_etat = n_etat(m2,
                                                line_quantity,
                                                column_quantity,
                                                i, j, d, deepcopy(etat),
-                                               #balls_quantity
+                                               balls_quantity
                                                )
                             if nouv_etat:
                                 # print("Coup: ({},{}) vers ({},{})".format(i,j,i+2*d[0],j+2*d[1]))
