@@ -2,6 +2,8 @@
 # cours informatique fondamentale 2021-2022
 # chapitre SAT
 # probleme du Solitaire
+# Cordeiro Fonseca Loic
+# Bourgeois Noe
 """
 il faut passer en arguments deux matrices
 (codées sous forme de listes de listes)

@@ -1,3 +1,5 @@
+# Cordeiro Fonseca Loic
+# Bourgeois Noe
 from copy import deepcopy
 from sympy import LeviCivita
 from colorama import Fore, Style

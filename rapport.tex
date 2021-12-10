@@ -5,6 +5,7 @@
 \usepackage[parfill]{parskip}
 
 \usepackage{amsmath}
+\usepackage{mathtools}
 \usepackage{amssymb}
 \usepackage{amsfonts}
 \usepackage{graphicx}
@@ -21,7 +22,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
-\definecolor{color0}{RGB}{147, 147, 147} %<--- I've changed this to make it more visible
+\definecolor{color0}{RGB}{147, 147, 147}
 \definecolor{color1}{RGB}{186, 033, 033}
 \definecolor{color2}{RGB}{000, 128, 000}
 \definecolor{color3}{RGB}{064, 128, 128}
@@ -101,7 +102,7 @@
 
 
 \title{SAT-solitaire}
-\author{Fonseca Loïc - Bourgeois Noé}
+\author{Cordeiro Fonseca Loïc - Bourgeois Noé}
 \date{November 2021}
 
 \begin{document}
@@ -113,8 +114,8 @@
 % -----------------------------------------------------
 
 \section{Introduction}
-Le Solitaire est un jeu de plateau classique à un seul joueur. 
-Le plateau de jeu comporte des trous dans lesquels on peut mettre des billes. 
+Le Solitaire est un jeu de plateau classique à un seul joueur.
+Le plateau de jeu comporte des trous dans lesquels on peut mettre des billes.
 Pour jouer un coup au Solitaire, il faut choisir trois cases adjacentes, qui sont
 toutes les trois sur une même ligne ou une même colonne du plateau. De surcroît,
 exactement deux billes doivent être posées sur les trois cases, dont une posée sur
@@ -126,381 +127,212 @@ entre matrice et configurations du jeu. Nous pouvons représenter une configurat
 une matrice de taille n × n dont les éléments appartiennent à {-1, 0, 1}. Si la
 valeur de la case (i, j) de la matrice est égale à -1, alors il n’y a pas de trous
 sur le plateau à la position (i, j); si cette valeur est égale à 0, alors il y a un
-trou sur le plateau `a la position (i, j), mais il n’y a pas de bille posée dessus; 
+trou sur le plateau `a la position (i, j), mais il n’y a pas de bille posée dessus;
 si cette valeur est égale à 1, alors il y a un trou sur le plateau à la position (i, j) avec une bille posée dessus.
 
 \section{Tests de satisfiabilité}
+
 \subsection{ Données générales}
-Soit $M$ une matrice de taille $L$ (nombre de lignes) * $C$ (nombre de colonnes)
-dont les éléments sont dans \{-1, 0, 1\},
-\\$f$, le nombre d'étapes pour atteindre une certaine configuration,
+\begin{itemize}
+\item[-] Soit $M$ une matrice de taille $L$ (nombre de lignes) * $C$ (nombre de colonnes)
+dont les éléments sont dans \{-1, 0, 1\}. Ceci est la matrice de départ.
+\item[-] Soit $M'$ une matrice de taille $L$ (nombre de lignes) * $C$ (nombre de colonnes)
+dont les éléments sont dans \{-1, 0, 1\}. Ceci est notre matrice finale souhaitée.
+\item[-] $S$, le nombre d'étapes nécessaires pour atteindre la configuration désirée.
 \label{nbEtapes}
-\\$s$, l'étape actuelle, de la partie, $s\in \{1,...,S\}$ et $S$. Lors d'une partie, on joue forcément un seul coup par étape, et chaque coup élimine exactement une bille. $S$ est donc égal à la différence de billes entre le plateau original et le plateau final (ou le plateau final désiré).
-\\Notons $D$, l'ensemble contenant les tuples directionnels, tel que $D=\{(1,0),(0,1),(-1,0),(0,-1)\}$
-\\$d$, un tuple dans $D$ la direction du mouvement d'un coup, avec $d_0$ le premier élément du tuple et $d_1$ le second.
+\item[-] $s$, l'étape actuelle, de la partie, $s\in \{1,...,S\}$. Lors d'une partie, on joue forcément un seul coup par étape, et chaque coup élimine exactement une bille. $S$ est donc égal à la différence de billes entre le plateau original et le plateau final (ou le plateau final désiré).
+\item[-] Notons $D$, l'ensemble contenant les tuples directionnels, tel que $D=\{(1,0),(0,1),(-1,0),(0,-1)\}$
+\item[-] $d$, un tuple dans $D$ la direction du mouvement d'un coup, avec $d_0$ le premier élément du tuple et $d_1$ le second.
+\item[-] $f$, est la fonction de transition. Elle prend en paramètres les coordonnées et le coup à jouer, ainsi que l'état du plateau pour lequel le coup doit être joué. Cette fonction vérifie alors la légalité du coup suivant les règles du jeu, renvoyant un nouveau tableau dans le cas d'un coup légal et 'None' sinon.
+\end{itemize}
 
 \subsection{Variables  Booléennes}
-On commence par définir les variables de nos formules. 
-\\La variable $x_{i,j,k,s}$
-\\vaut “Vrai” si le nombre k est à la ligne $i$, colonne $j$ à l'étape $s$. 
-\\La variable $m_{i,j,d,s}$
-\\vaut “Vrai” si la bille à déplacer dans la direction d est à la ligne $i$, colonne $j$ à l'étape $s$. 
+On commence par définir les variables de nos formules.
+\\La variable $E_{\iota,s}$ représente un état du tableau identifié par $\iota$ à l'étape $s$.
+\\Elle vaut “Vrai” si on considère le tableau $\iota$ à l'étape $s$ pour satisfaire notre formule.
+\\On considère que $\iota \in I$, l'ensemble des identificateurs de tous les états du tableau possible et $I_s$ l'ensemble des états du taleau possibles à l'étape $s$.
+\\La variable $m_{i,j,d,s}$ représente un coup joué depuis $(i,j)$ vers $d$ à l'étape $s$.
+\\Elle vaut “Vrai” si on considère la bille à déplacer dans la direction d, à la ligne $i$, colonne $j$ à l'étape $s$ pour satisfaire notre formule.
 
 
 \subsection{Clauses relatives au jeu}
-Nous avons 3 clauses définissant le fonctionnement du jeu.
+Nous avons 5 clauses générales définissant le fonctionnement du jeu. Une d'entre elles a des conditions  spéciales.
 
-\subsubsection{L'Etat du plateau: } 
-Posons $A_s$ l'état du plateau à une étape $s\in S$, prenant en compte pour chaque position $(i,j)$, un litéral $x_k$ où $k\in \{-1,0,1\}$. \newline
-$A_s = {\underset{\substack{i\in\{1,...,L\}\\j\in\{1,...,C\}}}{\bigwedge}}({\underset{k\in\{-1,0,1\}}{\bigvee}}x_{i,j,k,s})$ \newline
-Il y a deux exceptions à cela pour le tableau de départ $A_1$ et le tableau de fin $A_S$ où les valeurs sont fixées, vu qu'on reçoit le tableau de départ en entrée, ainsi que le tableau de fin: 
-
+\subsubsection{L'Etat du plateau:}
+Il y a plusieurs clauses gérant uniquement l'état du plateau. \newline
+\paragraph{Etat initial et final: } Il faut fixer quel état le tableau est sensé avoir au début ainsi qu'à la fin. Pour cela il faut fixer $E_{0,0}$ l'état initial associé à la matrice $M$ et $E_{-1,S}$ l'état final associé à la matrice $M'$.
+Vu qu'on ne sait pas combien d'états intermédiaires seront construits on donne simplement l'id "$-1$" à l'état final, afin d'éviter tout chevauchement. \newline
+Pour chacun de ces états on rajoute simplement une clause confirmant l'état, soit: \newline
+$K_1 = E_{0,0} \wedge E_{-1,S}$
 \newline
 
-$A_1 = {\underset{\substack{i\in\{1,...,L\}\\j\in\{1,...,C\}}}{\bigwedge}}(x_{i,j,k,1})$, 
+\paragraph{Maxmium un état par étape:}
+En effet, on ne peut considérer qu'un seul état par étape, afin d'avoir une continuation logique lors de la solution. S'il y avait plusieurs états par étape il serait rapidement compliqué d'identifier les bons états menant à l'état final désiré. À cette fin nous avons la clause: \newline
 
-où $k\in\{-1,0,1\}$, sur base du tableau reçu, et 
 
+$K_2 = {\underset{\substack{s\in{1,...S}\\\iota\in\{1,...,I_s\}\\\iota'\in\{1,...,I_s\}\\\iota \neq \iota'}}{\bigwedge}}(\neg E_{\iota,s} \vee \neg E_{\iota',s})$,
 \newline
 
-$A_S = {\underset{\substack{i\in\{1,...,L\}\\j\in\{1,...,C\}}}{\bigwedge}}(x_{i,j,k,S})$, 
+\subsubsection{Jouer des coups}
+Il nous faut une clause qui va vérifier la cohérence des coups à jouer à une étape $s$ en fonction de l'état du tableau à cette même étape, ainsi que du tableau résultant de ce coup. Soit à une étape $s$, on ne peut jouer un coup $m_{i,j,d,s}$ que si l'état $E_{\iota,s}$ contient des billes et des cases libres aux endroits appropriés par rapport au coup (rappel: Pour jouer un coup il faut faire sauter une bille au-dessus d'une autre de telle sorte qu'elle atterrisse dans la case suivante qui doit être vide. Une bille peut se déplacer dans 4 directions: haut, bas, droite et gauche.). On vérifie également que le coup ne sort pas du tableau bien sûr.\newline
+À la base on dirait, que si à une étape $s-1$ on joue un coup $m_{i,j,d,s-1}$ sur un tableau $E_{\iota,s-1}$, alors l'état à l'étape suivante sera $E_{f(m_{i,j,d,s-1},E_{\iota,s-1}),s}$ où $f(m_{i,j,d,s-1},E_{\iota,s-1})$ est la fonction de transition vérifiant la cohérence du coup. Ce qui nous donne la formule: \newline
 
-où $k\in\{-1,0,1\}$, sur base du tableau reçu.
-
-\begin{comment}
-
-\subsubsection{\colorbox{orange}{non-case}}
-Considérant une case (i,j)
-variable 
-x$_{i,j,k}$, 
-les cases aux positions 
-(i,j-1) variable x$_{i,j-1,k}$ 
-et (i,j+1) variable x$_{i,j+1,k^\prime}$, 
-sont des voisines
-si et seulement si k,$k^ {\prime}$ != -1
-
-\end{comment}
-
-\subsubsection{Exactement une valeur par case: }
-Dans chaque case (i, j), il doit y avoir exactement une seule valeur k.
-
-En d’autre termes pour tout i,
-pour tout j, pour tout k != k'
-, on n’a pas $x_{i,j,k} ~ \land ~ x_{i,j,{k^\prime}}$.
-\newline
-
-$\overset{N}{\underset{i=1}{\bigwedge}}
-~~\overset{N}{\underset{j=1}{\bigwedge}}$
-$(~~\underset{-1<={k,k'}<=1}{\bigwedge}
-\neg x_{i,j,k} ~ \lor ~ \neg x_{i,j,{k^\prime}})
- ~ \land ~ (x_{i,j,-1} ~ \lor ~ x_{i,j,0} ~ \lor ~ x_{i,j,1})$
- 
-\begin{comment}
- 
-\subsubsection{\colorbox{orange}{Voisin}}
-On commence par définir ce qu’est un voisin : 
-il s’agit d’une autre case dont les coordonnées ne sont pas éloignées de plus de 1.
-
-$V (i, j) = {(i', j') \in [1, N]^2| max(|i - i'|, |j - j'| = 1)}$
- 
-Considérant une case (i,j) 
-alors une voisine se trouve en (i,j-1) 
-et l'autre en (i,j+1) 
-
-Considérant une case x$_{i,j,k}$, alors une voisine se trouve en x$_{i,j-1,k^\prime}$ et l'autre en x$_{i,j+1,k^{\prime\prime}}$
-
-$(x_{i,j-1,k} \lor ~~ x_{i,j-1,k^\prime} )
-\land ~~
-x_i,_j,_k 
-\land ~~
-(x_{i,j+1,k^\prime} \lor ~~ x_{i,j+1,k})$
-
-\paragraph{sur même ligne}
-Considérant une case (i,j) 
-alors une voisine se trouve en (i,j-1) 
-et l'autre en (i,j+1) 
-
-
-%Si une variable x$_{i,j,k}$, 
-%alors une voisine est %x$_{i,j-1,k^\prime}$ et l'autre en %x$_{i,j+1,k^{\prime}}$
-
-$x_{i,j,1} \land ~~ 
-((x_{i,j-1,1} \land x_{i,j+1,0}) \lor 
-~~ (x_{i,j-1,0} \land x_{i,j+1,1}))$
-
-\paragraph{sur même colonne}
-Considérant une case (i,j) 
-alors une voisine se trouve en (i-1,j) 
-et l'autre en (i+1,j) 
-
-%variable x$_{i,j,k}$, 
-%alors une voisine se trouve en %x$_{i-1,j,k^\prime}$ et l'autre en %x$_{i+1,j,k^{\prime\prime}}$
-
-$(x_{i-1,j,1} \lor ~~ x_{i-1,j,0} )
-\land ~~
-x_{i,j,1}
-\land ~~
-(x_{i+1,j,0} \lor ~~ x_{i+1,j,1})$
-
-\end{comment}
-
-\subsubsection{Clauses temporelle}
-Ces clauses servent à verifier l'intégrite du plateau d'une étape à la prochaine, en effet il faut correctement déterminer l'état d'une case en fonction des étapes passées. \newline
-
-Une première serait: Si à l'étape $s-1$, une case n'avait pas de bille ($k=0$) et que le coup approprié (à une distance de deux par rapport à la case en question dans la direction opposée du coup) a été joué, alors cette case a à présent une bille ($k=1$):\newline
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}((x_{i,j,0,s-1} \wedge m_{i-2*d_0,j-2*d_1,d,s-1})\rightarrow x_{i,j,1,s})$\newline
-
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}(\neg(x_{i,j,0,s-1} \wedge m_{i-2*d_0,j-2*d_1,d,s-1})\vee x_{i,j,1,s})$\newline
-
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}(\neg x_{i,j,0,s-1} \vee \neg m_{i-2*d_0,j-2*d_1,d,s-1}\vee x_{i,j,1,s})$\newline
-
-La seconde serait: Si à l'étape $s-1$, une case avait une bille ($k=1$) et que le coup approprié (à une distance de un par rapport à la case en question dans la direction opposée du coup) a été joué, alors cette case n'a à présent plus de bille ($k=0$): \newline
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}((x_{i,j,1,s-1} \wedge m_{i-d_0,j-d_1,d,s-1})\rightarrow x_{i,j,0,s})$\newline
-
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}(\neg(x_{i,j,1,s-1} \wedge m_{i-d_0,j-d_1,d,s-1})\vee x_{i,j,0,s})$\newline
-
-$T_1 = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ s\in \{1,...,S\}\\ d \in D}}{\bigwedge}}(\neg x_{i,j,1,s-1} \vee \neg m_{i-d_0,j-d_1,d,s-1}\vee x_{i,j,0,s})$\newline
-
-\subsubsection{Exactement un coup par étape}
-Il faut s'assurer qu'à chaque étape exactement un coup soit joué. Pour se faire nous allons introduire deux clauses.
-
-\paragraph{Maximum un coup par étape :} 
-Une première clause permettant de limiter les coups à maximum un par étape.\newline
-\newline
-$M_1 = {{\underset{s \in \{1,...,S\}}{\bigwedge}}({\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ d \in D}}{\bigwedge}}m_{i,j,d,s} \rightarrow {\underset{\substack{i'\in\{1,...,L\} \\ j'\in\{1,...,C\} \\ d' \in D \\ i',j' \neq i,j \vee d' \neq d}}{\bigwedge}}} (\neg m_{i',j',d',s}))$\newline
-
-$M_1 = {{\underset{s \in \{1,...,S\}}{\bigwedge}}({\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ d \in D}}{\bigwedge}}\neg m_{i,j,d,s} \vee {\underset{\substack{i'\in\{1,...,L\} \\ j'\in\{1,...,C\} \\ d' \in D \\ i',j' \neq i,j \vee d' \neq d}}{\bigwedge}}} (\neg m_{i',j',d',s}))$\newline
-
-$M_1 = {{\underset{s \in \{1,...,S\}}{\bigwedge}}({\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ d \in D}}{\bigwedge}}{\underset{\substack{i'\in\{1,...,L\} \\ j'\in\{1,...,C\} \\ d' \in D \\ i',j' \neq i,j \vee d' \neq d}}{\bigwedge}}}(\neg m_{i,j,d,s} \vee \neg m_{i',j',d',s}))$\newline
+$K_3 = {\underset{\substack{s\in{1,...S}\\\iota\in I_s\\i\in\{1,...,L\}\\j \in\{1,...,C\}\\d \in D}}{\bigwedge}}((m_{i,j,d,s-1}\wedge E_{\iota,s-1})\rightarrow E_{f(m_{i,j,d,s-1},E_{\iota,s-1}),s})$ \newline
+$K_3 = {\underset{\substack{s\in{1,...S}\\\iota\in I_s\\i\in\{1,...,L\}\\j \in\{1,...,C\}\\d \in D}}{\bigwedge}}(\neg(m_{i,j,d,s-1}\wedge E_{\iota,s-1})\vee E_{f(m_{i,j,d,s-1},E_{\iota,s-1}),s})$ \newline
+$K_3 = {\underset{\substack{s\in{1,...S}\\\iota\in I_s\\i\in\{1,...,L\}\\j \in\{1,...,C\}\\d \in D}}{\bigwedge}}(\neg m_{i,j,d,s-1}\vee \neg E_{\iota,s-1}\vee E_{f(m_{i,j,d,s-1},E_{\iota,s-1}),s})$
+\newpage
+\paragraph{Coups interdits:}
+Toute combinaison de coup et d'état ne menant pas à une configuration légale doit être rendue impossible, éliminant les tableaux et coups obsolètes lors de la résolution de la formule, ce qui force la solution à emprunter le bon chemin jusqu'au tableau final désiré. Pour ce faire, on a la clause suivante: \newline
+$K_4 = \neg(m_{i,j,d,s}\wedge E_{\iota,s})$ \newline
+$K_4 = \neg m_{i,j,d,s}\vee \neg E_{\iota,s}$ \newline
+Il est important de préciser que cette clause n'est  ajoutée que pour les couples de coup et état qui ne retournent rien par la fonction de transition $f$.
 
 \paragraph{Au moins un coup par étape :}
-Une seconde clause forçant le fait qu'au moins un coup soit joué par étape. \newline
-$M_2 = {\underset{s \in \{1,...,S\}}{\bigwedge}}({\underset{\substack{i \in \{1,...,L\} \\ j \in \{1,...,C\} \\ d \in D}}{\bigvee}}m_{i,j,d,s})$
+Il faut jouer au moins un coup par étape, sinon la formule $K_3$ devient obsolète car en ne jouant aucun coup pour une étape, on peut aussi satisfaire la formule, or si on force un coup à être joué, il doit être cohérent. Cette clause s'écrit ainsi:  \newline
+$K_5 = {\underset{s \in \{1,...,S\}}{\bigwedge}}({\underset{\substack{i \in \{1,...,L\} \\ j \in \{1,...,C\} \\ d \in D}}{\bigvee}}m_{i,j,d,s})$
 
 
-\subsection{Déroulement d'une partie}
-Considérons donc le cas général avec deux matrices, M et M'. Chacune représente un plateau de jeu à un certain état, M étant l'état de départ et M' l'état de fin ciblé. On peut savoir le nombre d'étapes $S$ nécessaire pour passer de M à M' en calculant la différence du nombre de billes entre les deux plateaux (voir \textbf{\nameref{nbEtapes}}), soit la différence de cases valant 1 dans les matrices.
-\newline
-La matrice M, nous permet donc de déduire $A_1$ et la matrice M' de déduire $A_S$.
-\newline
-Si on a un plateau $A_s$ alors on avait avant un plateau $A_{s-1}$ et un coup joué $m_{s-1}$. 
-
-\begin{comment}
-\subsubsection{\colorbox{red}{Coup}}
-Nous avons défini un coup plus haut,
-mais pour effectivement en jouer un,
-il faut prendre en compte plusieurs
-choses,
-notamment, l'état du plateau, les
-voisins en fonction de la direction
-du coup, et bel et bien le fait
-qu'on ne joue qu'un coup par
-tour.\newline
-Chaque tour un ensemble de coups
-peuvent potentiellement être joués,
-définissons la clause $J_s$,
-l'ensemble des coups jouable à une
-étape s.\newline
-Pour chaque position (i,j) et chaque
-direction d, nous pouvons jouer un
-coup, si on ne joue pas d'autre coup
-et que les voisins adéquats sont
-bien une bille comme voisin direct
-et un trou pour le voisin
-d'après.
-\newline
-$J_s = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ d\in D}}{\bigwedge}}((m_{i,j,d,s}\rightarrow (\neg ({\underset{d'\neq d ;i',j' \neq i,j}{\bigvee}}m_{i',j',d',s})\wegde {\underset{(i',j',k)\in \{(i,j,1);(i+d_0,j+d_1,1);(i+2*d_0,j+2*d_1,0)\}}{\bigwedge}}x_{i',j',k,s})$
-\newline
----------------------
-\newline
-
-$J_s = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\}}}{\bigwedge}}       
-( \underset{d \in D }{\bigvee} (m_{i,j,d,s}\rightarrow \wegde {\underset{(i',j',k)\in \{(i,j,1);(i+d_0,j+d_1,1);(i+2*d_0,j+2*d_1,0)\}}{\bigwedge}}x_{i',j',k,s}))$
-\newline
------------------------
-\newline
-Qu'on peut transformer en: \newline
-\newline
-$J_s = {\underset{\substack{i\in\{1,...,L\} \\ j\in\{1,...,C\} \\ d\in D}}{\bigwedge}}((\neg m_{i,j,d,s}\vee (\neg ({\underset{d'\neq d ;i',j' \neq i,j}{\bigvee}}m_{i',j',d',s} \vee {\underset{(i',j',k)\in \{(i,j,1);(i+d_0,j+d_1,1);(i+2*d_0,j+2*d_1,0)\}}{\bigwedge}}x_{i',j',k,s})))$
-\newline
-
-\subsubsection{\colorbox{red}{Jouer un coup}}
-Si on peut jouer un coup, alors, 
-considérant une bille à la position (i,j) x$_{i,j,k}$, 
-une de ses voisines
-a forcément k = 1 et l'autre k = 0.\newline
-
-Soit si x$_{i,j-1,1}$, x$_{i,j,1}$ et x$_{i,j+1,0}$, alors on peut jouer un coup tel que x$_{i,j-1,0}$, x$_{i,j,0}$ et x$_{i,j+1,1}$
-\newline
-
-\begin{clips-code}
-    ((($x_{i,j-1,1} \land \neg x_{i,j+1,1}$) $\lor$ ($ x_{i,j-1,0} \land \neg x_{i,j+1,0}$)) $\land$ (($x_{i-1,j,1} \land \neg x_{i+1,j,1}$) $\lor$ ($ x_{i-1,j,0} \land \negx_{i+1,j,0}$)))
-    
-    $\land$ ($x_{i,j,1}$) 
-------------------------------------
-
-    ((($ x_{i,j-1,1,s}  \land x_{i,j+1,0,s} \land x_{i,j-1,0,s+1} \land x_{i,j+1,1,s+1} $) $\lor$ ($ x_{i,j-1,0,s} \land x_{i,j+1,1,s} \land x_{i,j-1,1,s+1} \land x_{i,j+1,0,s+1}$)) 
-    $\lor$
-    (($x_{i-1,j,1,s} \land x_{i+1,j,0,s} \land x_{i-1,j,0,s+1} \land x_{i+1,j,1,s+1}$) $\lor$ ($ x_{i-1,j,0,s} \land x_{i+1,j,1,s} \land x_{i-1,j,1,s+1} \land x_{i+1,j,0,s+1}$)))
-    $\land$ ($x_{i,j,1,s} \land x_{i,j,0,s}$) 
-
-\end{clips-code}
-
-    % $\land$ $\neg$($ x_{i,j-1,-1} \lor x_{i-1,j,-1} \lor x_{i,j,-1} 
-    % \lor x_{i,j+1,-1} \lor x_{i+1,j,-1}$)
-\end{comment}
-
-\subsection{ Mirroir }
-Soit M' une matrice de même taille
-dont les éléments sont aussi dans \{-1, 0, 1\},
-On veut savoir si il est possible de passer de
-la configuration du Solitaire
-qui correspond à M 
-à celle qui correspond à M'
-, en effectuant un ou
-plusieurs coups. 
-
-\subsubsection{Clauses relatives au problème}
-
-\[
-\mathop{\mathbb{\bigwedge}}_{\substack{i \in \{1,..,L\},\\ j \in \{1,..,C\}}} x_{i,j, M'_{i,j}, f}
-\]
-
-\subsubsection{Formule Normale Conjonctive}
-\textcolor{red}{(Question 1)}
-\paragraph{Composition}
-
-\subsubsection{Fonction "Solution"}
-\textcolor{red}{(Question 2)}
-
+\subsection{Déroulement d'une partie - Formule FNC}
+Dans ce projet une partie est un cas général du jeu de table anglais (solitaire). Les clauses définies ci-dessus nous permettent de construire une formule en FNC qui, donnée à un solveur SAT, nous dit s'il est possible de passer d'une configuration $M$ donnée à une autre configuration $M'$ donnée.
+Joignons donc nos clauses : \newline
+$K = K_1 \wedge K_2 \wedge K_3 \wedge K_4 \wedge K_5$ \newline
+$K = E_{0,0} \wedge E_{-1,S} \wedge {\underset{\substack{s\in{1,...S}\\\iota\in\{1,...,I_s\}\\\iota'\in\{1,...,I_s\}\\\iota \neq \iota'}}{\bigwedge}}(\neg E_{\iota,s} \vee \neg E_{\iota',s}) \wedge {\underset{\substack{s\in{1,...S}\\\iota\in I_s\\i\in\{1,...,L\}\\j \in\{1,...,C\}\\d \in D}}{\bigwedge}}(\neg m_{i,j,d,s-1}\vee \neg E_{\iota,s-1}\vee E_{f(m_{i,j,d,s-1},E_{\iota,s-1}),s}) \wedge (\neg m_{i,j,d,s}\vee \neg E_{\iota,s}) \wedge {\underset{s \in \{1,...,S\}}{\bigwedge}}({\underset{\substack{i \in \{1,...,L\} \\ j \in \{1,...,C\} \\ d \in D}}{\bigvee}}m_{i,j,d,s})$ \newline
+Notez que la clause $K_4$ interdisant des coups a été noté une seule fois au sein de cette fonction. Cela est dû aux conditions un peu spéciales de l'ajout d'une telle clause, prenant en compte l'ajout passé d'une autre clause.
 \newpage
 
-\subsection{ Dernière bille }
-\subsubsection{Dans le trou de départ}
-En se basant sur le programme précédent, 
-un programme qui pour toute configuration de la Figure 1 (sauf la 6 et la
-4), \\
-teste s’il est possible d’atteindre une configuration du même plateau
-mais qui contient une seule bille là où au départ il n’y avait pas de bille.
+\section{Code}
+Cette section porte sur le code utilisé pour construire les formules en FNC, et par extension aussi sur les réponses aux questions de l'énoncé.
+Comme demandé, le code est dans un fichier nommé \verb|projet.py| et est en Python 3.  \newline
+Le programme marche pour les 9 premiers et le dernier couple, mais a un problème de mémoire pour le 10ième et s'y plante. \newline
+\subsection{Librairies utilisées}
+\\ Les librairies utilisées dans les différents programmes sont les suivantes:
+\begin{itemize}
+    \item  pysat.solvers  (Glucose4)
 
-\paragraph{Clauses relatives au problème}
-Le plateau final contient une seule bille là où au départ il n’y avait pas de bille.
-Autrement dit, 
-\\le 0 devient 1,
-\\les 1 deviennent 0,
-\\les -1 restent -1,
+    \item  pysat.formula
 
-\[
-\mathop{\mathbb{\bigwedge}}_{\substack{i \in \{1,..,L\},\\ j \in \{1,..,C\}}} x_{i,j, -\frac{M_{i,j} - 3(M_{i,j})^2}{2} + 1, f}
-\]
+    \item colorama
 
-\paragraph{Résultats}
+    \item numpy
+
+    \item copy
+\end{itemize}
+
+
+\subsection{ Dernière bille}
 \textcolor{red}{(Question 3)}
+Pour toute configuration de la Figure 1 (sauf la 6 et la
+4), on veut savoir s’il est possible d’atteindre une configuration du même plateau
+mais qui contient une seule bille là où au départ il n’y avait pas de bille. Dû à un manque de mémoire de nos machines, nous avons décidés de faire ces tests sur des version raccourcies de ces matrices que nous donnerons ci-dessous. \newline
+Le code pour l'exécution de ces matrices se trouve dans le fichier \verb|testQ3.py| se trouvant dans le même dossier que le reste des fichiers relevant au projet. Pour faire tourner les tests il faut faire de la même manière que pour le fichier \verb|test.py| qui nous avait été donné.
 
+\newline
 
-\subsubsection{ Peu importe où}
-\paragraph{Clauses relatives au problème}
+Pour la première matrice, nous avons comme résultat qu'elle n'est pas solvable.\vspace{0.25cm} \newline
+\hspace{5cm}
+$M_1 = \begin{pmatrix*}[r]
+-1 & -1 &  1 & -1 & -1\\
+-1 &  1 &  1 &  1 & -1\\
+ 1 &  1 & -1 &  1 &  1\\
+ 1 &  1 &  1 &  1 &  1\\
+ 1 &  1 &  0 &  1 &  1\\
+-1 &  1 &  1 &  1 & -1\\
+-1 & -1 &  1 & -1 & -1
+\end{pmatrix*}$
+\newline
 
-\paragraph{Résultats}
+Pour la seconde matrice, nous avons comme résultat qu'elle n'est pas solvable.\vspace{0.25cm} \newline
+\hspace{5cm}
+$M_2 = \begin{pmatrix*}[r]
+-1 & 1 & 1 & 1 & -1\\
+ 1 & 1 & 1 & 1 &  1\\
+ 1 & 1 & 0 & 1 &  1\\
+ 1 & 1 & 1 & 1 &  1\\
+-1 & 1 & 1 & 1 & -1
+\end{pmatrix*}$
+\newline
+
+Pour la troisième matrice, nous avons comme résultat qu'elle [] solvable.\vspace{0.25cm} \newline
+\hspace{5cm}
+$M_3 = \begin{pmatrix*}[r]
+-1 & 1 & 1 & -1 & -1\\
+-1 & 1 & 1 & -1 & -1\\
+ 1 & 1 & 1 &  1 &  1\\
+ 1 & 1 & 0 &  1 &  1\\
+ 1 & 1 & 1 &  1 &  1\\
+-1 & 1 & 1 & -1 & -1
+\end{pmatrix*}$
+\newline
+
+Pour la quatrième et dernière matrice, nous avons comme résultat qu'elle [] solvable.\vspace{0.25cm} \newline
+\hspace{5cm}
+$M_4 = \begin{pmatrix*}[r]
+-1 & 1 & 1 & 1 & -1\\
+-1 & 1 & 1 & 1 & -1\\
+ 1 & 1 & 0 & 1 &  1\\
+ 1 & 1 & 1 & 1 &  1\\
+-1 & 1 & 1 & 1 & -1\\
+-1 & 1 & 1 & 1 & -1
+\end{pmatrix*}$
+
+\subsubsection{Peu importe où}
 \textcolor{red}{(Question 4)}
+Même question que précédemment mais on ne demande pas que la dernière
+bille soit placée là où il y avait le trou de départ: on demande simplement
+qu’il y ait dans la configuration finale exactement une bille, peu importe
+sa position. Tout comme pour la question précédente, pour des raisons de mémoire, nous avons décidés de raccourcir les matrices.
+Nous utiliserons donc pour ces tests-ci les mêmes matrices que précédemment et afin de gagner de la place nous n'allons pas le re-écrire ici, mais nous donnerons la position de la bille de fin et dirons si le problème est solvable avec cette configuration ou non. \newline
+Le code pour l'exécution de ces matrices se trouve dans le fichier \verb|testQ4.py| se trouvant dans le même dossier que le reste des fichiers relevant au projet. Pour faire tourner les tests il faut faire de la même manière que pour le fichier \verb|test.py| qui nous avait été donné. \newline
 
 
-\subsubsection{stratégie pour chaque possibilit´e de placer le trou au d´ebut}
+\subsubsection{Stratégie de placement de la première bille}
 \textcolor{red}{(Question 5)}
+On veut trouver une façon de ne pas placer une bille dans  la matrice $M$ ( basée sur la matrice 1 de la figure 1 de l'énoncé), de manière à ce qu'on puisse trouver une solution telle que la matrice résultante soit la matrice $M'$ de même taille où il n'y a qu'une bille dans la case où il n'y en avait pas à l'origine. Pour des raisons de capacités de calcul nous allons nous limiter à une matrice de taille 5x5, $M$ ainsi que $M'$, prendraient donc une forme comme ci-dessous. \newline
+Le code pour l'exécution de ces matrices se trouve dans le fichier \verb|testQ5.py| se trouvant dans le même dossier que le reste des fichiers relevant au projet. Pour faire tourner les tests il faut faire de la même manière que pour le fichier \verb|test.py| qui nous avait été donné.
+\vspace{1cm} \newline
+\vspace{0.5cm}
+\hspace{5cm}
+$M = \begin{pmatrix*}[r]
+-1 & -1 & 0 & -1 & -1\\
+-1 &  1 & 1 &  1 & -1\\
+ 1 &  1 & 1 &  1 &  1\\
+-1 &  1 & 1 &  1 & -1\\
+-1 & -1 & 1 & -1 & -1
+\end{pmatrix*}$
+\newline
 
-Pour le premier plateau de la Figure 1, on voudrait tester pour chaque possibilit´e de placer la trou au d´ebut, s’il existe une strat´egie pour n’avoir plus
-qu’une seule bille `a la fin, plac´ee sur le trou de d´epart. Math´ematiquement,
-4
-consid´erons les matrices de la forme
-o`u chaque bi ∈ {0, 1}. Pour tout i ∈ {1, . . . , 37}, on pose Mi
-la matrice
-o`u bi = 0 et bj = 1, pour tout j ∈ {1, . . . , 37} \ i. On pose ´egalement M0
-i
-le dual de Mi
-: le 0 de Mi est reamplac´e par 1, et tous les 1 par des 0.
-On veut maintenant construire la matrice R suivante: pour tout i ∈
-{1, . . . , 37}, bi = 1 s’il existe une strat´egie pour passer de Mi `a M0
-i
-, sinon
-bi = 0. Faire un programme qui calcule et affiche la matrice R, en utilsant
-les questions pr´ec´edentes. Si le temps de calcul est trop long, vous pouvez
-consid´erer un plateau de dimension inf´erieure.
-\paragraph{Clauses relatives au problème}
-
-
-% -----------------------------------------------------
-\newpage
-
-\section{Programs}
-
-\subsection{ Mirroring Cannibal Sheeps }
-
-\subsubsection{function}
-
-\begin{figure}[H]
-\begin{minipage}{\textwidth}
-  \centering	
-	\begin{lstlisting}
-	function solution(m1, m2) 
-    \end{lstlisting}
-  \label{fig:code_exemple}
-\end{minipage}
-\end{figure}
-
-
-
-
-
-
-
-\subsubsection{function}
-
-\begin{figure}[H]
-\begin{minipage}{\textwidth}
-  \centering	
-	\begin{lstlisting}
-	function tornado(m1, m2) 
-    \end{lstlisting}
-  \label{fig:code_exemple}
-\end{minipage}
-\end{figure}
-
-\paragraph{paragraph}:
-    paragraph
-    
-  
-
-\section{Résultats}
-\begin{center}
-\begin{tabular}{|c|c|c|c|
-                |c|c|c|c|}
-\hline
-plateau taille & quantité billes & Mirror & Tornado \\
-\hline
-              &                &       &\\
-             &                &               & \\
-             &                &               & \\
-             &                &               & \\
-\hline
-             &                &              & \\
-\hline
-\end{tabular}
-\end{center}
-
-
-
-\begin{figure}[H]
-  \centering
-	\includegraphics[scale=0.8]{img/Figure_1.png}
-  \label{fig:logo}
-\end{figure}
-
-\newpage
-
-\section{Discussion}
-    
-
-\section{Conclusion}
+\hspace{5cm}
+$M' = \begin{pmatrix*}[r]
+-1 & -1 & 1 & -1 & -1\\
+-1 &  0 & 0 & 0 & -1\\
+ 0 &  0 & 0 & 0 &  0\\
+-1 &  0 & 0 & 0 & -1\\
+-1 & -1 & 0 & -1 & -1
+\end{pmatrix*}$ \newline
+Notons R la matrice de forme: \vspace{1cm} \newline
+\vspace{0.5cm}
+\hspace{5cm}
+$R = \begin{pmatrix*}[r]
+-1 & -1 & b_1 & -1 & -1\\
+-1 &  b_2 & b_3 &  b_4 & -1\\
+ b_5 &  b_6 & b_7 &  b_8 &  b_9\\
+-1 &  b_{10} & b_{11} &  b_{12} & -1\\
+-1 & -1 & b_{13} & -1 & -1
+\end{pmatrix*}$
+\newline
+Contenant les résultats récupérés du solveur où $b_i$ vaut 1 si le solveur a trouvé le problème satisfiable, et 0 sinon. Après avoir fait tourner le solveur la matrice $R$ nous donne: \vspace{1cm} \newline
+\vspace{0.5cm}
+\hspace{5cm}
+$R = \begin{pmatrix*}[r]
+-1 & -1 & 0 & -1 & -1\\
+-1 &  0 & 0 &  0 & -1\\
+ 0 &  0 & 0 &  0 &  0\\
+-1 &  0 & 0 &  0 & -1\\
+-1 & -1 & 0 & -1 & -1
+\end{pmatrix*}$
+\newline
+Soit pour aucune configuration de plateau avec une case laissée vide à l'origine, ne trouve-t-on une solution où aucune case de la matrice n'a de bille sauf celle originellement laissée vide.\newline
+%-------------------------
 
 
 \end{document}
