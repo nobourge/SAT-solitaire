@@ -214,7 +214,6 @@ def solution(m1, m2):
         print("Etape: ", s-1)
         print("Nb etats dic: ", len(list(etats.keys())))
         # et_vals est une liste des différents états trouvés lors de l'étape en cours, ça servira plus tard
-        et_vals = []
         et_vals_ids = []
         #if steps_quantity == 31:
             #print("Etape: ", s-1)
@@ -244,18 +243,21 @@ def solution(m1, m2):
                                 # print("Coup: ({},{}) vers ({},{})".format(i,j,i+2*d[0],j+2*d[1]))
                                 if s == steps_quantity and nouv_etat == m2:  #  Si à la dernière étape l'état résultant équivaut à l'état final
                                     nouv_etat_id = -1  # On fixe son identificateur à celui de l'état final
-                                elif nouv_etat in et_vals:  # Si le
-                                    # nouvel état est un état qui a
-                                    # déjà été crée au passé, on lui
-                                    # donne l'id de l'état passé
-                                    nouv_etat_id = et_vals_ids[et_vals.index(nouv_etat)]
                                 else:
-                                    nouv_etat_id = list(etats.keys())[
-                                                       -1] + 1
-                                    etats_id[s].append(nouv_etat_id)
-                                    etats[nouv_etat_id] = nouv_etat
-                                    et_vals.append(nouv_etat) # Mise à jour de la liste d'états
-                                    et_vals_ids.append(nouv_etat_id)
+                                    exists = False
+                                    for tmp_id in et_vals_ids:
+                                        if nouv_etat == etats[tmp_id]: # Si le
+                                            # nouvel état est un état qui a
+                                            # déjà été crée au passé, on lui
+                                            # donne l'id de l'état passé
+                                            nouv_etat_id = tmp_id
+                                            exists = True
+                                            break
+                                    if not exists:
+                                        nouv_etat_id = list(etats.keys())[-1] + 1
+                                        etats_id[s].append(nouv_etat_id)
+                                        etats[nouv_etat_id] = nouv_etat
+                                        et_vals_ids.append(nouv_etat_id))
                                 """print("Id nouvel état: {}\nNouvel état:".format(nouv_etat_id))
                                 for p in etats[nouv_etat_id]:
                                     print(p)
