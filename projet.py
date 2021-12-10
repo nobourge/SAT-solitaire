@@ -257,7 +257,7 @@ def solution(m1, m2):
                                         nouv_etat_id = list(etats.keys())[-1] + 1
                                         etats_id[s].append(nouv_etat_id)
                                         etats[nouv_etat_id] = nouv_etat
-                                        et_vals_ids.append(nouv_etat_id))
+                                        et_vals_ids.append(nouv_etat_id)
                                 """print("Id nouvel état: {}\nNouvel état:".format(nouv_etat_id))
                                 for p in etats[nouv_etat_id]:
                                     print(p)
