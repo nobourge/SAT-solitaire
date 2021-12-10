@@ -66,6 +66,8 @@ def n_etat(m2,
     Fonction de transition qui tente de jouer le coup reçu sur le
     tableau reçu.
 
+    :param potential_isolation: bool: True si le coup peut provoquer l'
+    isolation d'une bille
     :param m2: list of list: état du plateau désiré
     :param line_quantity: int : quantité de ligne du plateau
     :param column_quantity: quantité de colonnes du plateau
