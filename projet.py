@@ -206,9 +206,13 @@ def solution(m1, m2):
         etats_id.append([])
     etats_id[-1].append(-1)
 
-    #  Une clause fixant l'état du tableau au début et à la fin
-    cnf.append([vpool.id((0, 0))])
-    cnf.append([vpool.id((-1, steps_quantity))])
+    #  Une clause fixant l'état du tableau
+    # au début
+    cnf.append([vpool.id((0, #
+                          0))])
+    # et à la fin
+    cnf.append([vpool.id((-1, #
+                          steps_quantity))])
 
     potential_isolation = False
     for s in range(1,
@@ -260,10 +264,10 @@ def solution(m1, m2):
                                         etats_id[s].append(nouv_etat_id)
                                         etats[nouv_etat_id] = nouv_etat
                                         et_vals_ids.append(nouv_etat_id)
-                                """print("Id nouvel état: {}\nNouvel état:".format(nouv_etat_id))
+                                print("Id nouvel état: {}\nNouvel état:".format(nouv_etat_id))
                                 for p in etats[nouv_etat_id]:
                                     print(p)
-                                print()"""
+                                print()
                                 cnf.append([-vpool.id((i, j, d, s - 1)),
                                             -vpool.id((ind, s - 1)),
                                             vpool.id(
